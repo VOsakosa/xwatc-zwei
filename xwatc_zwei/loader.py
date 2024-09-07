@@ -1,12 +1,13 @@
 """Lädt Scenarien."""
 
 from os import PathLike
-from attrs import define
-import pyparsing as pp
-from pyparsing import OpAssoc, pyparsing_common as pp_common
 
-from xwatc_zwei import verteiler
-from xwatc_zwei import geschichte
+import pyparsing as pp
+from attrs import define
+from pyparsing import OpAssoc
+from pyparsing import pyparsing_common as pp_common
+
+from xwatc_zwei import geschichte, verteiler
 
 ident = pp_common.identifier  # type: ignore
 NoSlashRest = pp.Regex(r"[^/\n]*").leave_whitespace()
@@ -72,4 +73,7 @@ def resolve_block(results: pp.ParseResults) -> verteiler.Geschichtsmodul:
 def load_scenario(path: PathLike) -> verteiler.Verteiler:
     """Lade ein Szenario aus einer Datei."""
     parsed = GeschichteBody.parse_file(path, parse_all=True, encoding="utf-8")
-    return verteiler.Verteiler(parsed)
+    vert = verteiler.Verteiler(parsed)
+    for modul in vert.module:
+        geschichte.teste_block(modul.zeilen, modul.id)
+    return vert
