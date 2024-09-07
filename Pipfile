@@ -5,8 +5,11 @@ name = "pypi"
 
 [packages]
 attrs = "*"
+pyparsing = "*"
+pyqt5 = "*"
 
 [dev-packages]
+pyqt5-stubs = "*"
 
 [requires]
 python_version = "3"
