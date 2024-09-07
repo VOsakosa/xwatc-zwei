@@ -4,7 +4,8 @@ from typing import Self
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout
 from attrs import define
 
-from xwatc_zwei.verteiler import Hauptgeschichte
+from xwatc_zwei.verteiler import Verteiler
+
 
 
 @define
@@ -34,7 +35,7 @@ class Hauptfenster:
 @define
 class Controller:
     fenster: Hauptfenster
-    model: Hauptgeschichte | None = None
+    model: Verteiler | None = None
     
     
     def __attrs_post_init__(self):

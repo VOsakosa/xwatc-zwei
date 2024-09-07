@@ -3,19 +3,21 @@
 from os import PathLike
 from attrs import define
 import pyparsing as pp
-import pyparsing.common as pp_common
+from pyparsing import OpAssoc, pyparsing_common as pp_common
 
 from xwatc_zwei import verteiler
 from xwatc_zwei import geschichte
 
 ident = pp_common.identifier  # type: ignore
-NoSlashRest = pp.Regex(r"[^/]*").leave_whitespace()
+NoSlashRest = pp.Regex(r"[^/\n]*").leave_whitespace()
 Header = pp.Suppress("/") + ident + pp.Suppress("/") + NoSlashRest
+
 
 @define
 class HeaderLine:
     name: str
     text: str
+
 
 @Header.set_parse_action
 def resolve_header(results: pp.ParseResults) -> HeaderLine:
@@ -24,23 +26,41 @@ def resolve_header(results: pp.ParseResults) -> HeaderLine:
 
 Zeile = pp.Forward()
 
-Sprung = pp.Literal(">") + (pp.Keyword("self") | ident)
+Text = (pp.Suppress("/") -
+        NoSlashRest)("Text").set_parse_action(lambda res: geschichte.Text(res[0]))
+Sprung = pp.Literal(">") - (pp.Keyword("self") | ident)
+Sprung.set_name("Sprung")
+Geben = (pp.Suppress("+") - ident - pp_common.integer[0,1])
+
 
 IndentedBlock = pp.IndentedBlock(Zeile)
 
-Bedingungskopf = pp.Literal("<") + ident + pp.Suppress(">")
+FuncBedingung = ident + pp.Literal("(") - (ident | pp_common.integer) + pp.Literal(")")
+Bedingung = pp.infix_notation(FuncBedingung | ident, [
+    ('!', 1, OpAssoc.RIGHT),
+    (pp.Literal(","), 2, OpAssoc.LEFT),
+    (pp.Literal("|"), 2, OpAssoc.LEFT),
+]) | ""
+Bedingung.set_name("Bedingung")
 
-Entscheidungskopf = pp.Literal(":") + ident + Bedingungskopf[0,1] + pp.Suppress(":")
+Bedingungskopf = (pp.Literal("<") - Bedingung + pp.Suppress(">")).set_name("Bedingungskopf")
 
-Entscheidung = Entscheidungskopf + IndentedBlock
-Bedingung = Bedingungskopf + IndentedBlock
+Entscheidungskopf = pp.Literal(":") - ident - Bedingungskopf[0, 1] - pp.Suppress(":") - NoSlashRest
 
-Text = (pp.Suppress("/") + NoSlashRest)("Text").set_parse_action(
-    lambda res: geschichte.Text(res[0]))
-Zeile << Text | Entscheidung | Bedingung | Sprung
+Entscheidungsblock = (Entscheidungskopf + IndentedBlock).set_name("Entscheidungsblock")
+Bedingungsblock = (Bedingungskopf + IndentedBlock).set_name("Bedingungsblock")
 
-Block = (Header + Zeile[...])("Block")
-GeschichteBody = Block[1,...]
+Entscheidung = Entscheidungsblock[1,...]
+Entscheidung.set_name("Entscheidung")
+Bedingungsfolge = Bedingungsblock[1,...]
+
+
+Zeile <<= Text | Geben | Entscheidung | Bedingungsfolge | Sprung
+Zeile.set_name("Zeile")
+
+Block = (Header + Zeile[...]).set_name("Block")
+GeschichteBody = Block[1, ...]
+
 
 @Block.set_parse_action
 def resolve_block(results: pp.ParseResults) -> verteiler.Geschichtsmodul:
@@ -53,4 +73,3 @@ def load_scenario(path: PathLike) -> verteiler.Verteiler:
     """Lade ein Szenario aus einer Datei."""
     parsed = GeschichteBody.parse_file(path, parse_all=True, encoding="utf-8")
     return verteiler.Verteiler(parsed)
-    
