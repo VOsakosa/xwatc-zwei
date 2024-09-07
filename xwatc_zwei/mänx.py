@@ -1,0 +1,1 @@
+"""The main character, his inventory etc."""

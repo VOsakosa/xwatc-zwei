@@ -1,0 +1,1 @@
+"""Speichert den Zustand des Spiels"""
