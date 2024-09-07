@@ -4,13 +4,10 @@ from attrs import define
 Bedingung = str
 Item = str
 
-@define
-class Attribute:
-    if_: Bedingung
 
-@define
+
+@define(frozen=True)
 class Text:
-    attribute: Attribute
     text: str
 
 @define

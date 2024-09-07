@@ -1,5 +1,5 @@
 """Die Verteiler wählen Geschichtsmodule"""
-from attrs import define
+from attrs import define, field
 from xwatc_zwei.geschichte import Zeile
 
 
@@ -12,11 +12,8 @@ class Geschichtsmodul:
 @define
 class Verteiler:
     """"""
-    module: list[Geschichtsmodul]
-
+    module: list[Geschichtsmodul] = field(converter=list)
 
 @define
-class Hauptgeschichte:
+class Weltposition:
     """"""
-    start: Geschichtsmodul
-    name: str
