@@ -1,5 +1,6 @@
 """Die einzelnen Befehle innerhalb einer Geschichte"""
 from collections.abc import Sequence
+from enum import Enum
 
 from attrs import define
 
@@ -20,11 +21,13 @@ class Erhalten:
     objekt: Item
     anzahl: int = 1
 
+class Sonderziel(Enum):
+    Self = 0
 
 @define
 class Sprung:
     """Die Geschichte wird woanders fortgesetzt. Sollte nur am Ende eines Blockes sein."""
-    ziel: Identifier
+    ziel: Identifier | Sonderziel
 
 
 @define
@@ -56,15 +59,15 @@ def teste_block(block: Sequence[Zeile], name: str) -> None:
         if isinstance(element, Sprung) and i != len(block) - 1:
             raise ValueError(f"Sprung ist nicht letztes Element ({name})")
         elif isinstance(element, IfElif):
-            for j, (bed, block) in enumerate(element.fälle):
-                teste_block(block, f"{name}.{i}")
+            for j, (bed, unterblock) in enumerate(element.fälle):
+                teste_block(unterblock, f"{name}.{i+1}{chr(0x41+j)}")
                 if not bed and j != len(element.fälle) - 1:
-                    raise ValueError(f"Leere Bedingung ist nicht letztes Element ({name})")
+                    raise ValueError(f"Leere Bedingung {name}.{i+1}{chr(0x41+j)} ist nicht letztes Element")
             if len(element.fälle) == 1 and not element.fälle[0]:
                 raise ValueError(f"Einzige Bedingung ist leer. ({name})")
         elif isinstance(element, Entscheidung):
-            for wahl in element.wahlen:
-                teste_block(wahl.block, f"{name}.{i}")
+            for j, wahl in enumerate(element.wahlen):
+                teste_block(wahl.block, f"{name}.{i+1}{chr(0x41+j)}")
             if len({wahl.id for wahl in element.wahlen}) != len(element.wahlen):
                 raise ValueError(f"Doppelt vergebene Wahl in {name}")
         elif not isinstance(element, Zeile):
