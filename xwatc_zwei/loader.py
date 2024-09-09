@@ -73,7 +73,7 @@ def _resolve_wahlmöglichkeit(wahl: pp.ParseResults) -> geschichte.Wahlmöglichk
     return geschichte.Wahlmöglichkeit(id, text, block, bed)
 
 
-def resolve_block(results: pp.ParseResults) -> list:
+def resolve_block(results: Sequence | pp.ParseResults) -> list:
     ans: list[geschichte.Zeile] = []
     group: list[geschichte.Zeile | _BBlock | geschichte.Wahlmöglichkeit] = []
     for line in results:
