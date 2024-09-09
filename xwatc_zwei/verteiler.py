@@ -2,7 +2,7 @@
 from collections.abc import Sequence
 from typing import Any, Self
 from attrs import define, field, Factory
-from xwatc_zwei.geschichte import Zeile
+from xwatc_zwei.geschichte import Bedingung, Entscheidung, IfElif, Sonderziel, Sprung, Zeile
 from xwatc_zwei import mänx as mänx_mod
 
 
@@ -69,5 +69,64 @@ class Spielzustand:
         return cls(verteiler, position=Weltposition(verteiler.module[0], (1,)),
                    mänx=mänx_mod.Mänx.default())
 
+    def aktuelle_zeile(self) -> Zeile:
+        """Gebe die aktuelle Zeile aus."""
+        while True:
+            try:
+                return self._position.modul[self._position.pos]
+            except KeyError:
+                if len(self._position.pos) > 1:
+                    self._position.pos = (*self._position.pos[:-3], self._position.pos[-2] + 1)
+                else:
+                    # Springe zu nächstem Modul
+                    raise NotImplementedError()
+
     def next(self) -> Zeile:
-        return self._position.modul[self._position.pos]
+        """Gehe zur nächsten Zeile.
+        Wenn eine Entscheidung ansteht, nutze :py:`Spielzustand.entscheide`.
+
+        :raises ValueError: wenn eine Entscheidung ansteht.
+        """
+        ans = self.aktuelle_zeile()
+        pos = self._position.pos
+        # Advance
+        if isinstance(ans, Entscheidung):
+            raise ValueError("Entscheidung steht an, kann `next` nicht verwenden.")
+        elif isinstance(ans, Sprung):
+            if ans.ziel == Sonderziel.Self:
+                self._position.pos = (0,)
+            else:
+                self._position.modul = self.verteiler.modul_by_id(ans.ziel)
+                self._position.pos = (0,)
+        elif isinstance(ans, IfElif):
+            for j, (bed, _fall) in enumerate(ans.fälle):
+                if not bed or self.eval_bedingung(bed):
+                    self._position.pos = (*pos, j, 0)
+                    break
+        else:
+            self._position.pos = (*pos[:-1], pos[-1] + 1)
+
+        return self.aktuelle_zeile()
+
+    def eval_bedingung(self, bed: Bedingung) -> bool:
+        """Evaluiere eine Bedingung zum jetzigen Zustand."""
+        return False
+
+    def entscheide(self, id: str) -> Zeile:
+        """Treffe eine Entscheidung und gebe die folgende Zeile zurück.
+        Wenn keine Entscheidung ansteht, nutze :py:`Spielzustand.next`.
+
+        :raises ValueError: wenn gerade keine Entscheidung ansteht.
+        """
+        ans = self.aktuelle_zeile()
+        if not isinstance(ans, Entscheidung):
+            raise ValueError("Keine Entscheidung steht an, kann `entscheide` nicht verwenden.")
+        for i, wahl in enumerate(ans.wahlen):
+            if wahl.id == id:
+                if wahl.bedingung and not self.eval_bedingung(wahl.bedingung):
+                    raise KeyError(f"Entscheidung {id} ist nicht freigeschaltet.")
+                break
+        else:
+            raise KeyError(f"Entscheidung {id} stand nicht zur Wahl.")
+        self._position.pos = (*self._position.pos, i, 0)
+        return self.aktuelle_zeile()

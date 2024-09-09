@@ -1,7 +1,7 @@
 
 import unittest
 from xwatc_zwei import LEVELS, geschichte, loader
-from xwatc_zwei.verteiler import Geschichtsmodul, Verteiler
+from xwatc_zwei.verteiler import Geschichtsmodul, Spielzustand, Verteiler
 
 
 class TestVerteiler(unittest.TestCase):
@@ -20,7 +20,7 @@ class TestVerteiler(unittest.TestCase):
         # Not case-insensitive
         with self.assertRaises(KeyError):
             vert.modul_by_id("A")
-    
+
     def test_disallow_doubled_id(self) -> None:
         with self.assertRaises(ValueError):
             Verteiler([
@@ -28,39 +28,59 @@ class TestVerteiler(unittest.TestCase):
                 Geschichtsmodul("a", [geschichte.Text("nichts zu tun")])
             ])
 
+
+def parse_bed(s): return s
+
+
+TEST_MODUL = Geschichtsmodul("test", [
+    geschichte.Text("Du bist im Wald"),
+    geschichte.IfElif(fälle=[
+        (parse_bed("has(schwert)"), [
+            geschichte.Text("Du hast ein Schwert!")
+        ])
+    ]),
+    geschichte.Entscheidung([
+        geschichte.Wahlmöglichkeit("a", "hin", block=[
+            geschichte.Text("Du gehst hin."),
+            geschichte.Entscheidung([
+                geschichte.Wahlmöglichkeit("z", "zurück", block=[
+                    geschichte.Text("Und du bist wieder zurück"),
+                    geschichte.Sprung("test"),
+                ]),
+                geschichte.Wahlmöglichkeit("w", "weiter", block=[
+                    geschichte.Text("Und du gehst weiter"),
+                    geschichte.Text("Ende!!"),
+                ]),
+            ])
+        ]),
+        geschichte.Wahlmöglichkeit("b", "her", block=[
+            geschichte.Text("Hallo Alter!")
+        ]),
+    ])
+])
+
+
 class TestGModul(unittest.TestCase):
 
     def test_getitem(self) -> None:
-        parse_bed = lambda s:s
-        modul = Geschichtsmodul("test", [
-            geschichte.Text("Du bist im Wald"),
-            geschichte.IfElif(fälle=[
-                (parse_bed("has(schwert)"), [
-                    geschichte.Text("Du hast ein Schwert!")
-                ])
-            ]),
-            geschichte.Entscheidung([
-                geschichte.Wahlmöglichkeit("a", "hin", block=[
-                    geschichte.Text("Du gehst hin."),
-                    geschichte.Entscheidung([
-                        geschichte.Wahlmöglichkeit("z", "zurück", block=[
-                            geschichte.Text("Und du bist wieder zurück"),
-                            geschichte.Sprung("test"),
-                        ]),
-                        geschichte.Wahlmöglichkeit("w", "weiter", block=[
-                            geschichte.Text("Und du gehst weiter"),
-                            geschichte.Text("Ende!!"),
-                        ]),
-                    ])
-                ]),
-                geschichte.Wahlmöglichkeit("b", "her", block=[
-                    geschichte.Text("Hallo Alter!")
-                ]),
-            ])
-        ])
+        modul = TEST_MODUL
         self.assertEqual(modul[0], geschichte.Text("Du bist im Wald"))
         self.assertEqual(modul[0,], geschichte.Text("Du bist im Wald"))
         self.assertIsInstance(modul[1], geschichte.IfElif)
-        self.assertEqual(modul[1,0,0], geschichte.Text("Du hast ein Schwert!"))
-        self.assertEqual(modul[1,0,0], geschichte.Text("Du hast ein Schwert!"))
-        self.assertEqual(modul[2,0,1,0,1], geschichte.Sprung("test"))
+        self.assertEqual(modul[1, 0, 0], geschichte.Text("Du hast ein Schwert!"))
+        self.assertEqual(modul[1, 0, 0], geschichte.Text("Du hast ein Schwert!"))
+        self.assertEqual(modul[2, 0, 1, 0, 1], geschichte.Sprung("test"))
+
+
+class TestSpielzustand(unittest.TestCase):
+
+    def test_next_und_entscheide(self) -> None:
+        modul = TEST_MODUL
+        zustand = Spielzustand.from_verteiler(Verteiler([modul]))
+        with self.assertRaises(ValueError):
+            zustand.entscheide("ja")
+        self.assertEqual(zustand.next(), geschichte.Text("Du bist im Wald"))
+        # Mänx hat kein Schwert.
+        self.assertIsInstance(zustand.next(), geschichte.Entscheidung)
+        with self.assertRaises(ValueError):
+            zustand.next()

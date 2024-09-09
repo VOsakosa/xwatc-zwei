@@ -78,6 +78,7 @@ Zeile = Text | Erhalten | Entscheidung | Sprung | IfElif
 
 def teste_block(block: Sequence[Zeile], name: str) -> None:
     """Teste Blöcke auf eindeutige, dumme Fehler, wie Sprünge vor Ende, oder falsche Typen."""
+    # TODO Fehlende Tests: Variablen, die nicht gesetzt werden; Sprünge ins nichts
     for i, element in enumerate(block):
         if isinstance(element, Sprung) and i != len(block) - 1:
             raise ValueError(f"Sprung ist nicht letztes Element ({name})")
