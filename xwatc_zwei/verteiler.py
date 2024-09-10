@@ -75,13 +75,23 @@ class Spielzustand:
             return None
         while True:
             try:
-                return self._position.modul[self._position.pos]
+                zeile = self._position.modul[self._position.pos] 
             except KeyError:
                 if len(self._position.pos) > 1:
                     self._position.pos = (*self._position.pos[:-3], self._position.pos[-2] + 1)
                 else:
                     # Springe zu nächstem Modul
                     raise NotImplementedError()
+            else:
+                if isinstance(zeile, IfElif):
+                    for j, (bed, _fall) in enumerate(zeile.fälle):
+                        if not bed or self.eval_bedingung(bed):
+                            self._position.pos = (*self._position.pos, j, 0)
+                            break
+                    else:
+                        self._position.pos = (*self._position.pos[:-1], self._position.pos[-1]+1)
+                else:
+                    return zeile
 
     def next(self) -> Zeile:
         """Gehe zur nächsten Zeile.
@@ -103,10 +113,7 @@ class Spielzustand:
                 self._position.modul = self.verteiler.modul_by_id(ans.ziel)
                 self._position.pos = (0,)
         elif isinstance(ans, IfElif):
-            for j, (bed, _fall) in enumerate(ans.fälle):
-                if not bed or self.eval_bedingung(bed):
-                    self._position.pos = (*pos, j, 0)
-                    break
+            raise AssertionError("aktuelle_zeile sollte nie IfElif zurückgeben")
         else:
             self._position.pos = (*pos[:-1], pos[-1] + 1)
 
