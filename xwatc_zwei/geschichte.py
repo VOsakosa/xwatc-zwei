@@ -29,6 +29,15 @@ class Erhalten:
     def blocks(self) -> 'Sequence[Sequence[Zeile]]':
         return ()
 
+@define
+class Treffen:
+    """Ein Treffen, z.B. ein Kampf"""
+    typ: str
+    args: Sequence[str | int]
+
+    @property
+    def blocks(self) -> 'Sequence[Sequence[Zeile]]':
+        return ()
 
 class Sonderziel(Enum):
     Self = 0
@@ -73,7 +82,7 @@ class IfElif:
         return [fall[1] for fall in self.fälle]
 
 
-Zeile = Text | Erhalten | Entscheidung | Sprung | IfElif
+Zeile = Text | Erhalten | Entscheidung | Sprung | IfElif | Treffen
 
 
 def teste_block(block: Sequence[Zeile], name: str) -> None:

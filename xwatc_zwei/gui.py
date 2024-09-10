@@ -92,7 +92,7 @@ def main():
     app = QApplication(sys.argv)
 
     # Model, View und Controller erstellen
-    zustand = verteiler.Spielzustand.from_verteiler(loader.load_scenario(LEVELS/"scenario1.cfg"))
+    zustand = verteiler.Spielzustand.from_verteiler(loader.load_scenario(LEVELS/"Die_Pilzfee.cfg"))
     view = Hauptfenster.create()
     controller = Controller(view, zustand)
 

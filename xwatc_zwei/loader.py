@@ -45,7 +45,10 @@ Geben = (pp.Suppress("+") - ident - pp_common.integer[0, 1]).set_parse_action(
 _IndentedBlockUngrouped = pp.IndentedBlock(Zeile, grouped=False)
 IndentedBlock = pp.Group(_IndentedBlockUngrouped)
 
-FuncBedingung = ident + pp.Literal("(") - (ident | pp_common.integer) + pp.Literal(")")
+FuncBedingung = ident + pp.Suppress("(") - pp.delimited_list(ident | pp_common.integer) + pp.Suppress(")")
+Treffen = pp.Suppress("%") - FuncBedingung
+Treffen.set_name("Treffen")
+Treffen.set_parse_action(lambda res: geschichte.Treffen(res[0], res[1:]))
 Bedingung = pp.Group(pp.infix_notation(FuncBedingung | ident, [
     ('!', 1, OpAssoc.RIGHT),
     (pp.Literal(","), 2, OpAssoc.LEFT),
@@ -102,7 +105,7 @@ def _glue_lines(lines: list) -> Sequence[geschichte.Zeile]:
 _IndentedBlockUngrouped.set_parse_action(resolve_block)
 
 
-Zeile <<= Text | Geben | Entscheidungsblock | Bedingungsblock | Sprung
+Zeile <<= Text | Geben | Entscheidungsblock | Bedingungsblock | Sprung | Treffen
 Zeile.set_name("Zeile")
 
 Modul = (Header + Zeile[...]).set_name("Block")
