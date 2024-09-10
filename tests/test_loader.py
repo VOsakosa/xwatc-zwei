@@ -81,3 +81,6 @@ class TestLoader(unittest.TestCase):
 
     def test_szenario(self):
         print(loader.load_scenario(LEVELS / "scenario1.cfg"))
+    
+    def test_szenario_pilzfee(self):
+        print(loader.load_scenario(LEVELS / "Die_Pilzfee.cfg"))

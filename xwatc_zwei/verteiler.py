@@ -22,7 +22,10 @@ class Geschichtsmodul:
             key_iter = iter(key)
             for index, subpart in zip(key_iter, key_iter, strict=False):
                 start = start[index].blocks[subpart]
-            return start[key[-1]]
+            try:
+                return start[key[-1]]
+            except IndexError:
+                raise KeyError from None
         raise TypeError("Unexpected key type")
 
 
