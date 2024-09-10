@@ -81,7 +81,7 @@ class Spielzustand:
                 zeile = self._position.modul[self._position.pos] 
             except KeyError:
                 if len(self._position.pos) > 1:
-                    self._position.pos = (*self._position.pos[:-3], self._position.pos[-2] + 1)
+                    self._position.pos = (*self._position.pos[:-3], self._position.pos[-3] + 1)
                 else:
                     # Springe zu nächstem Modul
                     raise NotImplementedError()
