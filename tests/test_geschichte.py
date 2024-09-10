@@ -77,6 +77,7 @@ class TestSpielzustand(unittest.TestCase):
     def test_next_und_entscheide(self) -> None:
         modul = TEST_MODUL
         zustand = Spielzustand.from_verteiler(Verteiler([modul]))
+        self.assertIsNone(zustand.aktuelle_zeile())
         with self.assertRaises(ValueError):
             zustand.entscheide("ja")
         self.assertEqual(zustand.next(), geschichte.Text("Du bist im Wald"))

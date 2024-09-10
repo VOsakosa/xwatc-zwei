@@ -53,7 +53,7 @@ class Verteiler:
 class Weltposition:
     """Eine Position in der Geschichte."""
     modul: Geschichtsmodul
-    pos: tuple[int, ...]
+    pos: tuple[int, ...] | None = None
 
 
 @define
@@ -66,11 +66,13 @@ class Spielzustand:
 
     @classmethod
     def from_verteiler(cls, verteiler: Verteiler) -> Self:
-        return cls(verteiler, position=Weltposition(verteiler.module[0], (1,)),
+        return cls(verteiler, position=Weltposition(verteiler.module[0]),
                    mänx=mänx_mod.Mänx.default())
 
-    def aktuelle_zeile(self) -> Zeile:
+    def aktuelle_zeile(self) -> Zeile | None:
         """Gebe die aktuelle Zeile aus."""
+        if self._position.pos is None:
+            return None
         while True:
             try:
                 return self._position.modul[self._position.pos]
@@ -87,10 +89,12 @@ class Spielzustand:
 
         :raises ValueError: wenn eine Entscheidung ansteht.
         """
-        ans = self.aktuelle_zeile()
         pos = self._position.pos
+        ans = self.aktuelle_zeile()
         # Advance
-        if isinstance(ans, Entscheidung):
+        if pos is None:
+            self._position.pos = (0,)
+        elif isinstance(ans, Entscheidung):
             raise ValueError("Entscheidung steht an, kann `next` nicht verwenden.")
         elif isinstance(ans, Sprung):
             if ans.ziel == Sonderziel.Self:
@@ -106,7 +110,9 @@ class Spielzustand:
         else:
             self._position.pos = (*pos[:-1], pos[-1] + 1)
 
-        return self.aktuelle_zeile()
+        ans = self.aktuelle_zeile()
+        assert ans, "After advance, Zeile should be set."
+        return ans
 
     def eval_bedingung(self, bed: Bedingung) -> bool:
         """Evaluiere eine Bedingung zum jetzigen Zustand."""
@@ -119,6 +125,8 @@ class Spielzustand:
         :raises ValueError: wenn gerade keine Entscheidung ansteht.
         """
         ans = self.aktuelle_zeile()
+        if not self._position.pos:
+            raise ValueError("Keine Entscheidung steht an, es hat nicht mal angefangen.")
         if not isinstance(ans, Entscheidung):
             raise ValueError("Keine Entscheidung steht an, kann `entscheide` nicht verwenden.")
         for i, wahl in enumerate(ans.wahlen):
@@ -129,4 +137,6 @@ class Spielzustand:
         else:
             raise KeyError(f"Entscheidung {id} stand nicht zur Wahl.")
         self._position.pos = (*self._position.pos, i, 0)
-        return self.aktuelle_zeile()
+        ans = self.aktuelle_zeile()
+        assert ans
+        return ans
