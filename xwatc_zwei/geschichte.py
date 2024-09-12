@@ -40,6 +40,7 @@ class Treffen:
         return ()
 
 class Sonderziel(Enum):
+    """Ein Spezial-Ziel für Sprünge, erstmal nur Self."""
     Self = 0
 
 

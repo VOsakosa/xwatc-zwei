@@ -16,4 +16,5 @@ class Mänx:
         return cls({w: 10 for w in (*cls.ATTRIBUTE, *cls.P_WERTE)})
     
     def get_wert(self, name: str) -> int:
+        """Attribut oder P-Wert des Mänxen holen."""
         return self.werte[name]

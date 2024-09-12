@@ -25,6 +25,7 @@ class Hauptfenster:
         # Layout und Label hinzufügen
         layout = QVBoxLayout()
         label = QLabel("")
+        label.setWordWrap(True)
         layout2 = QVBoxLayout()
         buttons_box = QWidget()
         buttons_box.setLayout(layout2)
