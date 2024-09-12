@@ -22,10 +22,7 @@ class Geschichtsmodul:
             key_iter = iter(key)
             for index, subpart in zip(key_iter, key_iter, strict=False):
                 start = start[index].blocks[subpart]
-            try:
-                return start[key[-1]]
-            except IndexError:
-                raise KeyError from None
+            return start[key[-1]]
         raise TypeError("Unexpected key type")
 
 
@@ -79,7 +76,7 @@ class Spielzustand:
         while True:
             try:
                 zeile = self._position.modul[self._position.pos] 
-            except KeyError:
+            except IndexError:
                 if len(self._position.pos) > 1:
                     self._position.pos = (*self._position.pos[:-3], self._position.pos[-3] + 1)
                 else:
