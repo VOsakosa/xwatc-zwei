@@ -70,7 +70,10 @@ class TestGModul(unittest.TestCase):
         self.assertEqual(modul[1, 0, 0], geschichte.Text("Du hast ein Schwert!"))
         self.assertEqual(modul[1, 0, 0], geschichte.Text("Du hast ein Schwert!"))
         self.assertEqual(modul[2, 0, 1, 0, 1], geschichte.Sprung("test"))
-
+        with self.assertRaises(IndexError):
+            modul[5, 0, 0]
+        with self.assertRaises(IndexError):
+            modul[0, 5, 0]
 
 class TestSpielzustand(unittest.TestCase):
 
@@ -84,4 +87,10 @@ class TestSpielzustand(unittest.TestCase):
         # Mänx hat kein Schwert.
         self.assertIsInstance(zustand.next(), geschichte.Entscheidung)
         with self.assertRaises(ValueError):
+            # Bei Entscheidungen kann man nicht next sagen.
             zustand.next()
+
+    #def test_bedingungen(selfself) ->None:
+        #Was ist das für ein Fehlertyp?
+        #with self.assertRaises():
+            #geschichte.IfElif(parse_bed("hat()"))

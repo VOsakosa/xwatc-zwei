@@ -1,0 +1,15 @@
+/Bedingungen/
+/Hallo!
+<hat(schwert), hat(speer), hat(apfel), hat(mandarine), hat(drachenherz), hat(ästlein)>
+    /Undkette
+<hat(schwert)>
+    /Schwert hat. Nicht wenn Undkette.
+/
+<hat(schwert)>
+    /Schwert trotz Undkette.
+/
+<hat(schwert)|hat(speer)|hat(apfel)|hat(drachenherz)>
+    /Oderkette
+/
+<hat(schwert), hat(apfel)| hat(drachenherz), hat(ästlein)| hat(kiesel)| hat(haarbüschel), hat(universalschlüssel)>
+    /Undodermischung
