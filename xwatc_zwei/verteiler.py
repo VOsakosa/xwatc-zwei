@@ -2,7 +2,7 @@
 from collections.abc import Sequence
 from typing import Any, Self
 from attrs import define, field, Factory
-from xwatc_zwei.geschichte import Bedingung, Entscheidung, IfElif, Sonderziel, Sprung, Zeile
+from xwatc_zwei.geschichte import Bedingung, Bedingungsobjekt, Entscheidung, IfElif, Sonderziel, Sprung, Zeile
 from xwatc_zwei import mänx as mänx_mod
 
 
@@ -123,6 +123,15 @@ class Spielzustand:
 
     def eval_bedingung(self, bed: Bedingung) -> bool:
         """Evaluiere eine Bedingung zum jetzigen Zustand."""
+        zustand: Bedingungsobjekt = self
+        return bed.test(zustand)
+    
+    def ist_variable(self, variable: str) -> bool:
+        """Teste, ob eine Variable gesetzt ist."""
+        return False
+    
+    def teste_funktion(self, func_name: str, args: list[str | int]) -> bool:
+        """Teste eine Bedingungsfunktion."""
         return False
 
     def entscheide(self, id: str) -> Zeile:

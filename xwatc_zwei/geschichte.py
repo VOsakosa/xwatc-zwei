@@ -1,12 +1,72 @@
 """Die einzelnen Befehle innerhalb einer Geschichte"""
 from collections.abc import Sequence
 from enum import Enum
+from typing import Protocol
 
-from attrs import define
+from attrs import define, field, validators
 
-Bedingung = str
+
 Item = str
 Identifier = str
+
+
+class Bedingungsobjekt(Protocol):
+    def ist_variable(self, variable: str) -> bool:
+        """Teste, ob eine Variable gesetzt ist."""
+
+    def teste_funktion(self, func_name: str, args: list[str | int]) -> bool:
+        """Teste eine Bedingungsfunktion."""
+
+
+@define
+class VariablenBedingung:
+    """Teste eine Variable"""
+    variable: Identifier = field(validator=validators.instance_of(Identifier))
+
+    def test(self, zustand: Bedingungsobjekt) -> bool:
+        return zustand.ist_variable(self.variable)
+
+    def __str__(self) -> str:
+        return self.variable
+
+
+@define
+class NichtBedingung:
+    bedingung: 'Bedingung'
+
+    def test(self, zustand: Bedingungsobjekt) -> bool:
+        return not self.bedingung.test(zustand)
+
+
+@define
+class OderBedingung:
+    bedingungen: 'list[Bedingung]'
+
+    def test(self, zustand: Bedingungsobjekt) -> bool:
+        return any(bed.test(zustand) for bed in self.bedingungen)
+
+
+@define
+class UndBedingung:
+    bedingungen: 'list[Bedingung]'
+
+    def test(self, zustand: Bedingungsobjekt) -> bool:
+        return all(bed.test(zustand) for bed in self.bedingungen)
+
+
+@define
+class FuncBedingung:
+    func_name: str = field(validator=validators.instance_of(str))
+    args: list[str | int]
+
+    def test(self, zustand: Bedingungsobjekt) -> bool:
+        return zustand.teste_funktion(self.func_name, self.args)
+
+    def __str__(self) -> str:
+        return f"{self.func_name}({', '.join(str(a) for a in self.args)})"
+
+
+Bedingung = NichtBedingung | OderBedingung | UndBedingung | FuncBedingung | VariablenBedingung
 
 
 @define(frozen=True)
@@ -29,6 +89,7 @@ class Erhalten:
     def blocks(self) -> 'Sequence[Sequence[Zeile]]':
         return ()
 
+
 @define
 class Treffen:
     """Ein Treffen, z.B. ein Kampf"""
@@ -38,6 +99,7 @@ class Treffen:
     @property
     def blocks(self) -> 'Sequence[Sequence[Zeile]]':
         return ()
+
 
 class Sonderziel(Enum):
     """Ein Spezial-Ziel für Sprünge, erstmal nur Self."""
@@ -60,7 +122,8 @@ class Wahlmöglichkeit:
     id: str
     text: str
     block: 'Sequence[Zeile]'
-    bedingung: Bedingung | None = None
+    bedingung: Bedingung | None = field(
+        default=None, validator=validators.instance_of(None | Bedingung))  # type: ignore
 
 
 @define
@@ -76,7 +139,13 @@ class Entscheidung:
 @define
 class IfElif:
     """Eine Reihe von Fallunterscheidungen."""
-    fälle: 'Sequence[tuple[Bedingung | None, Sequence[Zeile]]]'
+    fälle: 'Sequence[tuple[Bedingung | None, Sequence[Zeile]]]' = field()
+
+    @fälle.validator
+    def _validate_fälle(self, _attrib, value):
+        for bed, blocks in value:
+            if not isinstance(bed, None | Bedingung):
+                raise TypeError("Bedingungen in IfElif müssen None oder Bedingung sein.")
 
     @property
     def blocks(self) -> 'Sequence[Sequence[Zeile]]':
@@ -107,3 +176,6 @@ def teste_block(block: Sequence[Zeile], name: str) -> None:
                 raise ValueError(f"Doppelt vergebene Wahl in {name}")
         elif not isinstance(element, Zeile):
             raise TypeError(f"{element} ist keine Zeile! ({name})")
+
+
+from xwatc_zwei import verteiler  # noqa
