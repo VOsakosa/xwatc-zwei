@@ -29,7 +29,8 @@ class TestVerteiler(unittest.TestCase):
             ])
 
 
-def parse_bed(s): return s
+def parse_bed(s):
+    return loader.Bedingung.parse_string(s, parse_all=True)[0]
 
 
 TEST_MODUL = Geschichtsmodul("test", [

@@ -45,15 +45,19 @@ Geben = (pp.Suppress("+") - ident - pp_common.integer[0, 1]).set_parse_action(
 _IndentedBlockUngrouped = pp.IndentedBlock(Zeile, grouped=False)
 IndentedBlock = pp.Group(_IndentedBlockUngrouped)
 
-FuncBedingung = ident + pp.Suppress("(") - pp.delimited_list(ident | pp_common.integer) + pp.Suppress(")")
-Treffen = pp.Suppress("%") - FuncBedingung
+FuncAufruf = ident + pp.Suppress("(") - pp.delimited_list(ident | pp_common.integer) + pp.Suppress(")")
+Treffen = pp.Suppress("%") - FuncAufruf
+
+FuncBedingung = FuncAufruf.copy().set_parse_action(lambda toks: geschichte.FuncBedingung(toks[0], list(toks[1:])))
+VarBedingung = ident.copy().set_parse_action(lambda toks: geschichte.VariablenBedingung(toks[0]))
+
 Treffen.set_name("Treffen")
 Treffen.set_parse_action(lambda res: geschichte.Treffen(res[0], res[1:]))
-Bedingung = pp.Group(pp.infix_notation(FuncBedingung | ident, [
-    ('!', 1, OpAssoc.RIGHT),
-    (pp.Literal(","), 2, OpAssoc.LEFT),
-    (pp.Literal("|"), 2, OpAssoc.LEFT),
-]) | "")
+Bedingung = pp.infix_notation(FuncBedingung | VarBedingung, [
+    ('!', 1, OpAssoc.RIGHT, lambda toks: geschichte.NichtBedingung(toks[0])),
+    (pp.Literal(","), 2, OpAssoc.LEFT, lambda toks: geschichte.UndBedingung(toks.as_list())),
+    (pp.Literal("|"), 2, OpAssoc.LEFT, lambda toks: geschichte.OderBedingung(toks.as_list())),
+]) | pp.Empty().set_parse_action(lambda: None)
 Bedingung.set_name("Bedingung")
 
 Bedingungskopf = (pp.Suppress("<") - Bedingung + pp.Suppress(">")).set_name("Bedingungskopf")
