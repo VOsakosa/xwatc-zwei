@@ -110,6 +110,18 @@ class TestSpielzustand(unittest.TestCase):
         self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung("!(.dritte_frau_tot)")))
         self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung(".zweite_frau_tot")))
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("!.zweite_frau_tot")))
+    
+    def test_eigenschaft_bedingung(self) -> None:
+        zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
+        assert zustand.mänx
+        zustand.mänx._werte["schlau"] = 12
+        self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("schlau(1)")))
+        self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("schlau(12)")))
+        self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung("schlau(13)")))
+        self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung("stabil(12)")))
+        self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("stabil(10)")))
+        self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("stabil(10), schlau(12)")))
+        self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("stabil(10), !schlau(13)")))
        
 
     #def test_bedingungen(selfself) ->None:

@@ -1,10 +1,13 @@
 """Die Verteiler wählen Geschichtsmodule"""
 from collections.abc import Sequence
-from typing import Any, Self
+from typing import cast, Self
 from attrs import define, field, Factory
 from xwatc_zwei.geschichte import Bedingung, Bedingungsobjekt, Entscheidung, IfElif, Sonderziel, Sprung, Zeile
 from xwatc_zwei import mänx as mänx_mod
 
+
+class VarTypError(RuntimeError):
+    """Ein Fehler, wenn der Typ einer Variable nicht stimmt."""
 
 @define
 class Geschichtsmodul:
@@ -142,6 +145,13 @@ class Spielzustand:
     
     def teste_funktion(self, func_name: str, args: list[str | int]) -> bool:
         """Teste eine Bedingungsfunktion."""
+        if func_name in mänx_mod.Mänx.ATTRIBUTE or func_name in mänx_mod.Mänx.P_WERTE:
+            if not self.mänx:
+                raise VarTypError("Mänx-Eigenschaft gefragt, aber kein Mänx.")
+            if not len(args) == 1 or not isinstance(args[0], int):
+                raise VarTypError("Eigenschaften-Tests nehmen genau einen Int.")
+            value, = args
+            return self.mänx.get_wert(func_name) >= cast(int, value)
         return False
 
     def entscheide(self, id: str) -> Zeile:
