@@ -9,7 +9,7 @@ from xwatc_zwei import LEVELS, geschichte, loader, verteiler
 
 def rule_test(rule: pyparsing.ParserElement, text: str) -> Any:
     """Test a rule """
-    rule.set_debug(True)
+    # rule.set_debug(True)
     return rule.parse_string(inspect.cleandoc(text), parse_all=True)
 
 
@@ -41,6 +41,26 @@ class TestLoader(unittest.TestCase):
 :süd
     / Ich will Monster jagen!
 """, parse_all=True)
+    
+    def test_if_elif(self) -> None:
+        gmodule = rule_test(loader.GeschichteBody, """
+        /test/
+        <hat(speer)>
+            / Ich steche dich ab!
+        <hat(schwert)>
+            / Ich bringe dich um!
+        <>
+            / Ich werde dich irgendwie umbringen!
+        """)
+        self.assertEqual(len(gmodule), 1)
+        gmodul: verteiler.Geschichtsmodul = gmodule[0]
+        self.assertIsInstance(gmodul, verteiler.Geschichtsmodul)
+        self.assertEqual(len(gmodul.zeilen), 1)
+        ifelif = gmodul.zeilen[0]
+        assert isinstance(ifelif, geschichte.IfElif)
+        self.assertEqual(len(ifelif.fälle), 3)
+        self.assertIsNone(ifelif.fälle[2][0])
+        self.assertEqual(ifelif.fälle[0][0], geschichte.FuncBedingung("hat", ["speer"]))
 
     def test_hat(self):
         loader.Bedingung.parse_string("hat(speer)", parse_all=True)
@@ -50,8 +70,29 @@ class TestLoader(unittest.TestCase):
     / Ich will Monster jagen!
 """, parse_all=True)
 
-    def test_bedingung(self):
-        loader.Bedingungskopf.parse_string("<hat(speer), flink(70), glück(67)>", parse_all=True)
+    def test_und_bedingung(self):
+        bed = loader.parse_bedingung("hat(speer), flink(70), glück(67)")
+        self.assertIsInstance(bed, geschichte.UndBedingung)
+        self.assertEqual(len(bed.bedingungen), 3)
+        self.assertEqual(bed.bedingungen[0], geschichte.FuncBedingung("hat", ["speer"]))
+    
+    def test_oder_bedingung(self):
+        bed = loader.parse_bedingung("hat(speer) | flink(70) | glück(67)")
+        self.assertIsInstance(bed, geschichte.OderBedingung)
+        self.assertEqual(len(bed.bedingungen), 3)
+        self.assertEqual(bed.bedingungen[2], geschichte.FuncBedingung("glück", [67]))
+    
+    def test_und_oder_bedingung(self):
+        bed = loader.Bedingungskopf.parse_string("<hat(speer) , flink(70) | !glück(67)>",
+                                                 parse_all=True)
+        self.assertIsInstance(bed[0], geschichte.OderBedingung)
+        self.assertEqual(len(bed[0].bedingungen), 2)
+        self.assertEqual(bed[0].bedingungen[0], geschichte.UndBedingung(
+            [geschichte.FuncBedingung("hat", ["speer"]), geschichte.FuncBedingung("flink", [70])]
+        ))
+        self.assertEqual(bed[0].bedingungen[1], geschichte.NichtBedingung(
+            geschichte.FuncBedingung("glück", [67])
+        ))
 
     def test_recursive(self):
         loader.Zeile.parse_string("""\

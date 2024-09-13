@@ -29,14 +29,13 @@ class TestVerteiler(unittest.TestCase):
             ])
 
 
-def parse_bed(s):
-    return loader.Bedingung.parse_string(s, parse_all=True)[0]
+
 
 
 TEST_MODUL = Geschichtsmodul("test", [
     geschichte.Text("Du bist im Wald"),
     geschichte.IfElif(fälle=[
-        (parse_bed("has(schwert)"), [
+        (loader.parse_bedingung("has(schwert)"), [
             geschichte.Text("Du hast ein Schwert!")
         ])
     ]),

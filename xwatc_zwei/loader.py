@@ -11,6 +11,8 @@ from pyparsing import pyparsing_common as pp_common
 
 from xwatc_zwei import geschichte, verteiler
 
+pp.ParserElement.enable_packrat()
+
 ident = pp_common.identifier  # type: ignore
 NoSlashRest = pp.Regex(r"[^/\n]*").leave_whitespace()
 Header = pp.Suppress("/") + ident + pp.Suppress("/") + NoSlashRest
@@ -18,7 +20,9 @@ Header = pp.Suppress("/") + ident + pp.Suppress("/") + NoSlashRest
 
 @Header.set_parse_action
 def resolve_header(results: pp.ParseResults) -> list:
-    return [results[0], geschichte.Text(results[1].strip())]
+    if results[1].strip():
+        return [results[0], geschichte.Text(results[1].strip())]
+    return [results[0]]
 
 
 @define
@@ -54,10 +58,10 @@ VarBedingung = ident.copy().set_parse_action(lambda toks: geschichte.VariablenBe
 Treffen.set_name("Treffen")
 Treffen.set_parse_action(lambda res: geschichte.Treffen(res[0], res[1:]))
 Bedingung = pp.infix_notation(FuncBedingung | VarBedingung, [
-    ('!', 1, OpAssoc.RIGHT, lambda toks: geschichte.NichtBedingung(toks[0])),
-    (pp.Literal(","), 2, OpAssoc.LEFT, lambda toks: geschichte.UndBedingung(toks.as_list())),
-    (pp.Literal("|"), 2, OpAssoc.LEFT, lambda toks: geschichte.OderBedingung(toks.as_list())),
-]) | pp.Empty().set_parse_action(lambda: None)
+    (pp.Suppress('!'), 1, OpAssoc.RIGHT, lambda toks: geschichte.NichtBedingung(toks[0][0])),
+    (pp.Suppress(","), 2, OpAssoc.LEFT, lambda toks: geschichte.UndBedingung(toks[0].as_list())),
+    (pp.Suppress("|"), 2, OpAssoc.LEFT, lambda toks: geschichte.OderBedingung(toks[0].as_list())),
+]) | pp.Empty().set_parse_action(lambda: [None])
 Bedingung.set_name("Bedingung")
 
 Bedingungskopf = (pp.Suppress("<") - Bedingung + pp.Suppress(">")).set_name("Bedingungskopf")
@@ -131,3 +135,6 @@ def load_scenario(path: PathLike) -> verteiler.Verteiler:
     for modul in vert.module:
         geschichte.teste_block(modul.zeilen, modul.id)
     return vert
+
+def parse_bedingung(bed_str: str):
+    return Bedingung.parse_string(bed_str, parse_all=True)[0]
