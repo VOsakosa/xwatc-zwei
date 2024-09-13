@@ -18,6 +18,7 @@ class TestLoader(unittest.TestCase):
         loader.Header.parse_string("/faa/ Hier bist du also", parse_all=True)
         with self.assertRaises(pyparsing.ParseException):
             loader.Header.parse_string("hhaga")
+        with self.assertRaises(pyparsing.ParseException):
             loader.Header.parse_string("/Ich\n/will nicht")
 
     def test_line_ends(self):

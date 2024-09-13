@@ -13,10 +13,9 @@ from xwatc_zwei import geschichte, verteiler
 
 pp.ParserElement.enable_packrat()
 
-ident = pp_common.identifier  # type: ignore
+ident = pp_common.identifier.copy().set_whitespace_chars(" \t")  # type: ignore
 NoSlashRest = pp.Regex(r"[^/\n]*").leave_whitespace()
-Header = pp.Suppress("/") + ident + pp.Suppress("/") + NoSlashRest + pp.LineEnd()
-Header.set_whitespace_chars(" \t")
+Header = pp.Suppress("/") + ident + pp.Suppress("/").set_whitespace_chars(" ") + NoSlashRest + pp.LineEnd()
 
 
 @Header.set_parse_action
