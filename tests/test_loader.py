@@ -156,3 +156,6 @@ class TestLoader(unittest.TestCase):
 
     def test_szenario_pilzfee(self):
         loader.load_scenario(LEVELS / "Die_Pilzfee.cfg")
+    
+    def test_szenario_hund(self):
+        loader.load_scenario(LEVELS / "Kurztreffen_Straße.cfg")

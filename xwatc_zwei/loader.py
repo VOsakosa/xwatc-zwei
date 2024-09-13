@@ -47,6 +47,8 @@ Geben = pp.Suppress("+") - ident + pp_common.integer[0, 1].set_whitespace_chars(
 Geben.set_parse_action(lambda res: geschichte.Erhalten(*res))
 Geben.set_name("Geben")
 
+Kommentar = pp.Suppress( pp.Literal("#") + pp.restOfLine)
+
 
 _IndentedBlockUngrouped = pp.IndentedBlock(Zeile, grouped=False)
 IndentedBlock = pp.Group(_IndentedBlockUngrouped)
@@ -118,7 +120,7 @@ def _glue_lines(lines: list) -> Sequence[geschichte.Zeile]:
 _IndentedBlockUngrouped.set_parse_action(resolve_block)
 
 _LineEnd = pp.Suppress(pp.LineEnd() | pp.StringEnd()).set_name("Zeilenende")
-_Statement = (Text | Geben | Sprung | Treffen) + _LineEnd
+_Statement = (Text | Geben | Sprung | Treffen | Kommentar) + _LineEnd
 _Statement.set_name("Statement")
 
 Zeile <<= _Statement | Entscheidungsblock | Bedingungsblock
