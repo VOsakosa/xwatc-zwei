@@ -85,7 +85,7 @@ class Spielzustand:
                     self._position.pos = (*self._position.pos[:-3], self._position.pos[-3] + 1)
                 else:
                     # Springe zu nächstem Modul
-                    raise NotImplementedError()
+                    raise NotImplementedError("Kann noch nicht zu neuem Modul springen.")
             else:
                 if isinstance(zeile, IfElif):
                     for j, (bed, _fall) in enumerate(zeile.fälle):
