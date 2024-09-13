@@ -9,8 +9,8 @@ VarTyp = bool | int | str
 @define
 class Mänx:
     """Der Hauptcharakter"""
-    ATTRIBUTE: ClassVar[list[str]] = ["flink", "weise", "schlau", "stark"]
-    P_WERTE: ClassVar[list[str]] = ["unsicher", "stabil", "gesellig"]
+    ATTRIBUTE: ClassVar[list[str]] = ["flink", "weise", "schlau", "stark", "wach"]
+    P_WERTE: ClassVar[list[str]] = ["selbstsicher", "stabil", "gesellig"]
     _werte: dict[str, int]
 
     @classmethod
