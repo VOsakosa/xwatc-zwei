@@ -89,6 +89,23 @@ class TestSpielzustand(unittest.TestCase):
         with self.assertRaises(ValueError):
             # Bei Entscheidungen kann man nicht next sagen.
             zustand.next()
+    
+    def test_modulvariable_bedingung(self) -> None:
+        zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
+        zustand._position.modul_vars["dritte_frau_tot"] = True
+        self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("dritte_frau_tot")))
+        self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung("!(dritte_frau_tot)")))
+        self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung("zweite_frau_tot")))
+        self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("!zweite_frau_tot")))
+
+    def test_weltvariable_bedingung(self) -> None:
+        zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
+        assert zustand.welt
+        zustand.welt.setze_variable("dritte_frau_tot", True)
+        self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung(".dritte_frau_tot")))
+        self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung("!(.dritte_frau_tot)")))
+        self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung(".zweite_frau_tot")))
+        self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("!.zweite_frau_tot")))
 
     #def test_bedingungen(selfself) ->None:
         #Was ist das für ein Fehlertyp?

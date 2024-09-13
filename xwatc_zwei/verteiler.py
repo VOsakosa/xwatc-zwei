@@ -54,6 +54,7 @@ class Weltposition:
     """Eine Position in der Geschichte."""
     modul: Geschichtsmodul
     pos: tuple[int, ...] | None = None
+    modul_vars: 'dict[str, mänx_mod.VarTyp]' = Factory(dict)
 
 
 @define
@@ -62,12 +63,12 @@ class Spielzustand:
     verteiler: Verteiler
     _position: Weltposition
     mänx: None | mänx_mod.Mänx = None
-    _variablen: dict[str, Any] = Factory(dict)
+    welt: None | mänx_mod.Welt = None
 
     @classmethod
     def from_verteiler(cls, verteiler: Verteiler) -> Self:
         return cls(verteiler, position=Weltposition(verteiler.module[0]),
-                   mänx=mänx_mod.Mänx.default())
+                   mänx=mänx_mod.Mänx.default(), welt=mänx_mod.Welt())
 
     def aktuelle_zeile(self) -> Zeile | None:
         """Gebe die aktuelle Zeile aus."""
@@ -128,7 +129,11 @@ class Spielzustand:
     
     def ist_variable(self, variable: str) -> bool:
         """Teste, ob eine Variable gesetzt ist."""
-        return False
+        value = self._position.modul_vars.get(variable, False)
+        if not isinstance(value, bool):
+            raise TypeError(f"Normale Variable als Flag verwendet: {variable}")
+        return value
+
     
     def teste_funktion(self, func_name: str, args: list[str | int]) -> bool:
         """Teste eine Bedingungsfunktion."""

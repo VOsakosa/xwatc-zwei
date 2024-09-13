@@ -121,7 +121,7 @@ class TestLoader(unittest.TestCase):
     /Die Luft schmeckt salzig. Dir ist hungrig.""")
 
     def test_szenario(self):
-        print(loader.load_scenario(LEVELS / "scenario1.cfg"))
+        loader.load_scenario(LEVELS / "scenario1.cfg")
     
     def test_szenario_pilzfee(self):
-        print(loader.load_scenario(LEVELS / "Die_Pilzfee.cfg"))
+        loader.load_scenario(LEVELS / "Die_Pilzfee.cfg")
