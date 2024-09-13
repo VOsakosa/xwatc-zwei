@@ -8,7 +8,18 @@
             "name": "Xwatc II(GUI)",
             "type": "debugpy",
             "request": "launch",
-            "module": "xwatc_zwei.gui"
-        }
+            "module": "xwatc_zwei.gui",
+            "justMyCode": false,
+        },
+        {
+            "name": "Python: Debug Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "purpose": ["debug-test"],
+            "console": "integratedTerminal",
+            "justMyCode": false
+          }
+          
     ]
 }

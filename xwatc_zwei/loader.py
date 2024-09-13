@@ -15,7 +15,8 @@ pp.ParserElement.enable_packrat()
 
 ident = pp_common.identifier  # type: ignore
 NoSlashRest = pp.Regex(r"[^/\n]*").leave_whitespace()
-Header = pp.Suppress("/") + ident + pp.Suppress("/") + NoSlashRest
+Header = pp.Suppress("/") + ident + pp.Suppress("/") + NoSlashRest + pp.LineEnd()
+Header.set_whitespace_chars(" \t")
 
 
 @Header.set_parse_action
@@ -42,18 +43,22 @@ _Self = pp.CaselessKeyword("self").set_parse_action(lambda: geschichte.Sonderzie
 Sprung = pp.Suppress(">") - (_Self | ident).set_parse_action(lambda res:
                                                              geschichte.Sprung(res[0]))
 Sprung.set_name("Sprung")
-Geben = (pp.Suppress("+") - ident - pp_common.integer[0, 1]).set_parse_action(
-    lambda res: geschichte.Erhalten(*res))
+# TODO - hinzufügen
+Geben = pp.Suppress("+") - ident + pp_common.integer[0, 1].set_whitespace_chars(" \t")
+Geben.set_parse_action(lambda res: geschichte.Erhalten(*res))
+Geben.set_name("Geben")
 
 
 _IndentedBlockUngrouped = pp.IndentedBlock(Zeile, grouped=False)
 IndentedBlock = pp.Group(_IndentedBlockUngrouped)
 
-FuncAufruf = ident + pp.Suppress("(") - pp.delimited_list(ident | pp_common.integer) + pp.Suppress(")")
+FuncAufruf = ident + pp.Suppress("(") - pp.delimited_list(ident |
+                                                          pp_common.integer) + pp.Suppress(")")
 Treffen = pp.Suppress("%") - FuncAufruf
 
-FuncBedingung = FuncAufruf.copy().set_parse_action(lambda toks: geschichte.FuncBedingung(toks[0], list(toks[1:])))
-VarBedingung = pp.Combine(pp.Literal(".")[0,1] + ident).set_parse_action(
+FuncBedingung = FuncAufruf.copy().set_parse_action(
+    lambda toks: geschichte.FuncBedingung(toks[0], list(toks[1:])))
+VarBedingung = pp.Combine(pp.Literal(".")[0, 1] + ident).set_parse_action(
     lambda toks: geschichte.VariablenBedingung(toks[0]))
 
 Treffen.set_name("Treffen")
@@ -113,8 +118,12 @@ def _glue_lines(lines: list) -> Sequence[geschichte.Zeile]:
 
 _IndentedBlockUngrouped.set_parse_action(resolve_block)
 
+_LineEnd = pp.Suppress(pp.LineEnd() | pp.StringEnd()).set_name("Zeilenende")
+_Statement = (Text | Geben | Sprung | Treffen) + _LineEnd
+_Statement.set_name("Statement")
 
-Zeile <<= Text | Geben | Entscheidungsblock | Bedingungsblock | Sprung | Treffen
+Zeile <<= _Statement | Entscheidungsblock | Bedingungsblock
+
 Zeile.set_name("Zeile")
 
 Modul = (Header + Zeile[...]).set_name("Block")
@@ -132,10 +141,11 @@ def resolve_modul(results: pp.ParseResults) -> verteiler.Geschichtsmodul:
 def load_scenario(path: PathLike) -> verteiler.Verteiler:
     """Lade ein Szenario aus einer Datei."""
     parsed = GeschichteBody.parse_file(path, parse_all=True, encoding="utf-8")
-    vert = verteiler.Verteiler(parsed)
+    vert = verteiler.Verteiler(parsed.as_list())
     for modul in vert.module:
         geschichte.teste_block(modul.zeilen, modul.id)
     return vert
+
 
 def parse_bedingung(bed_str: str):
     return Bedingung.parse_string(bed_str, parse_all=True)[0]

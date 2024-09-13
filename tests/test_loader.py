@@ -18,6 +18,31 @@ class TestLoader(unittest.TestCase):
         loader.Header.parse_string("/faa/ Hier bist du also", parse_all=True)
         with self.assertRaises(pyparsing.ParseException):
             loader.Header.parse_string("hhaga")
+            loader.Header.parse_string("/Ich\n/will nicht")
+
+    def test_line_ends(self):
+        with self.assertRaises(pyparsing.ParseBaseException):
+            rule_test(loader.Modul, """
+            /header/
+            /test / und nocheinmal      
+            """)
+        with self.assertRaises(pyparsing.ParseBaseException):
+            rule_test(loader.Modul, """
+            /header/
+            :entscheidung: Weiter
+                / und auch hier / nochmal
+            """)
+
+    def test_zwei_header(self):
+        test = """
+        /erster_block/Muh sagt die Kuh
+        >zweiter_block
+        /zweiter_block/Doch nicht, ätschdibätsch.
+        """
+        with self.assertRaises(pyparsing.ParseBaseException):
+            rule_test(loader.Modul, test)
+        module = rule_test(loader.GeschichteBody, test)
+        self.assertEqual(len(module), 2)
 
     def test_sprung(self):
         loader.Sprung.parse_string(">faa", parse_all=True)
@@ -32,25 +57,30 @@ class TestLoader(unittest.TestCase):
 :süd: Süden
     / Ich will Monster jagen!
 """, parse_all=True)
-        loader.Entscheidungsblock.parse_string("""\
-:süd<blut>:
-    / Ich will Monster jagen!
-""", parse_all=True)
+        rule_test(loader.Entscheidungsblock, """
+            :süd<blut>:
+                / Ich will Monster jagen!
+                +fisch
+        """)
         with self.assertRaises((pyparsing.ParseBaseException)):
             loader.Entscheidungsblock.parse_string("""\
 :süd
     / Ich will Monster jagen!
 """, parse_all=True)
-    
+
     def test_if_elif(self) -> None:
         gmodule = rule_test(loader.GeschichteBody, """
         /test/
         <hat(speer)>
             / Ich steche dich ab!
+            / mit meinem Speer!
         <hat(schwert)>
             / Ich bringe dich um!
+            + Text         
         <>
             / Ich werde dich irgendwie umbringen!
+            / und dann aufschlitzen!
+            + hassmurmel
         """)
         self.assertEqual(len(gmodule), 1)
         gmodul: verteiler.Geschichtsmodul = gmodule[0]
@@ -75,13 +105,13 @@ class TestLoader(unittest.TestCase):
         self.assertIsInstance(bed, geschichte.UndBedingung)
         self.assertEqual(len(bed.bedingungen), 3)
         self.assertEqual(bed.bedingungen[0], geschichte.FuncBedingung("hat", ["speer"]))
-    
+
     def test_oder_bedingung(self):
         bed = loader.parse_bedingung("hat(speer) | flink(70) | glück(67)")
         self.assertIsInstance(bed, geschichte.OderBedingung)
         self.assertEqual(len(bed.bedingungen), 3)
         self.assertEqual(bed.bedingungen[2], geschichte.FuncBedingung("glück", [67]))
-    
+
     def test_und_oder_bedingung(self):
         bed = loader.Bedingungskopf.parse_string("<hat(speer) , flink(70) | !glück(67)>",
                                                  parse_all=True)
@@ -122,6 +152,6 @@ class TestLoader(unittest.TestCase):
 
     def test_szenario(self):
         loader.load_scenario(LEVELS / "scenario1.cfg")
-    
+
     def test_szenario_pilzfee(self):
         loader.load_scenario(LEVELS / "Die_Pilzfee.cfg")
