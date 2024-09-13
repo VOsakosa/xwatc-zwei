@@ -129,7 +129,12 @@ class Spielzustand:
     
     def ist_variable(self, variable: str) -> bool:
         """Teste, ob eine Variable gesetzt ist."""
-        value = self._position.modul_vars.get(variable, False)
+        if variable.startswith("."):
+            if not self.welt:
+                raise ValueError("Welt ist None, kann keine Weltvariablen abfragen.")
+            value = self.welt.get_variable(variable[1:], False)
+        else:
+            value = self._position.modul_vars.get(variable, False)
         if not isinstance(value, bool):
             raise TypeError(f"Normale Variable als Flag verwendet: {variable}")
         return value

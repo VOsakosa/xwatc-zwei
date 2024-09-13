@@ -1,9 +1,9 @@
 """The main character, his inventory etc."""
 
-from typing import ClassVar, Self
+from typing import ClassVar, Self, TypeVar
 from attrs import define, Factory
 
-
+T = TypeVar("T")
 VarTyp = bool | int | str
 
 @define
@@ -31,3 +31,6 @@ class Welt:
         ans = self._variablen.get(variable)
         self._variablen[variable] = wert
         return ans
+    
+    def get_variable(self, variable: str, default: T) -> VarTyp | T:
+        return self._variablen.get(variable, default)

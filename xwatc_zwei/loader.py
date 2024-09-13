@@ -53,7 +53,8 @@ FuncAufruf = ident + pp.Suppress("(") - pp.delimited_list(ident | pp_common.inte
 Treffen = pp.Suppress("%") - FuncAufruf
 
 FuncBedingung = FuncAufruf.copy().set_parse_action(lambda toks: geschichte.FuncBedingung(toks[0], list(toks[1:])))
-VarBedingung = ident.copy().set_parse_action(lambda toks: geschichte.VariablenBedingung(toks[0]))
+VarBedingung = pp.Combine(pp.Literal(".")[0,1] + ident).set_parse_action(
+    lambda toks: geschichte.VariablenBedingung(toks[0]))
 
 Treffen.set_name("Treffen")
 Treffen.set_parse_action(lambda res: geschichte.Treffen(res[0], res[1:]))

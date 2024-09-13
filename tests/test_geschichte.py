@@ -1,5 +1,7 @@
 
 import unittest
+
+from pyparsing import ParseBaseException
 from xwatc_zwei import LEVELS, geschichte, loader
 from xwatc_zwei.verteiler import Geschichtsmodul, Spielzustand, Verteiler
 
@@ -102,10 +104,13 @@ class TestSpielzustand(unittest.TestCase):
         zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
         assert zustand.welt
         zustand.welt.setze_variable("dritte_frau_tot", True)
+        with self.assertRaises(ParseBaseException):
+            loader.parse_bedingung(". dritte_frau_tot")
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung(".dritte_frau_tot")))
         self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung("!(.dritte_frau_tot)")))
         self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung(".zweite_frau_tot")))
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("!.zweite_frau_tot")))
+       
 
     #def test_bedingungen(selfself) ->None:
         #Was ist das für ein Fehlertyp?
