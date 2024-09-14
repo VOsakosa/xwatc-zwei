@@ -3,7 +3,7 @@ import unittest
 
 from pyparsing import ParseBaseException
 from xwatc_zwei import LEVELS, geschichte, loader
-from xwatc_zwei.verteiler import Geschichtsmodul, Spielzustand, Verteiler
+from xwatc_zwei.verteiler import Geschichtsmodul, Spielzustand, VarTypError, Verteiler
 
 
 class TestVerteiler(unittest.TestCase):
@@ -29,9 +29,6 @@ class TestVerteiler(unittest.TestCase):
                 Geschichtsmodul("a", [geschichte.Text("a")]),
                 Geschichtsmodul("a", [geschichte.Text("nichts zu tun")])
             ])
-
-
-
 
 
 TEST_MODUL = Geschichtsmodul("test", [
@@ -77,6 +74,7 @@ class TestGModul(unittest.TestCase):
         with self.assertRaises(IndexError):
             modul[0, 5, 0]
 
+
 class TestSpielzustand(unittest.TestCase):
 
     def test_next_und_entscheide(self) -> None:
@@ -91,7 +89,7 @@ class TestSpielzustand(unittest.TestCase):
         with self.assertRaises(ValueError):
             # Bei Entscheidungen kann man nicht next sagen.
             zustand.next()
-    
+
     def test_modulvariable_bedingung(self) -> None:
         zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
         zustand._position.modul_vars["dritte_frau_tot"] = True
@@ -110,7 +108,7 @@ class TestSpielzustand(unittest.TestCase):
         self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung("!(.dritte_frau_tot)")))
         self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung(".zweite_frau_tot")))
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("!.zweite_frau_tot")))
-    
+
     def test_eigenschaft_bedingung(self) -> None:
         zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
         assert zustand.mänx
@@ -122,9 +120,21 @@ class TestSpielzustand(unittest.TestCase):
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("stabil(10)")))
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("stabil(10), schlau(12)")))
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("stabil(10), !schlau(13)")))
-       
 
-    #def test_bedingungen(selfself) ->None:
-        #Was ist das für ein Fehlertyp?
-        #with self.assertRaises():
-            #geschichte.IfElif(parse_bed("hat()"))
+    def test_fähigkeit_bedingung(self) -> None:
+        zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
+        assert zustand.mänx
+        zustand.mänx.set_fähigkeit("fliegen", 3)
+        self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("f(fliegen,1)")))
+        self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("f(fliegen,3)")))
+        self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung("f(fliegen,5)")))
+        self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung("f(liegen,1)")))
+        with self.assertRaises(VarTypError):
+            zustand.eval_bedingung(loader.parse_bedingung("f(fliegen, -1)"))
+        with self.assertRaises(VarTypError):
+            zustand.eval_bedingung(loader.parse_bedingung("f(fliegen, 0)"))
+
+    # def test_bedingungen(selfself) ->None:
+        # Was ist das für ein Fehlertyp?
+        # with self.assertRaises():
+            # geschichte.IfElif(parse_bed("hat()"))

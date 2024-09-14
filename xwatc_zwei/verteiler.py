@@ -1,13 +1,17 @@
 """Die Verteiler wählen Geschichtsmodule"""
 from collections.abc import Sequence
-from typing import cast, Self
-from attrs import define, field, Factory
-from xwatc_zwei.geschichte import Bedingung, Bedingungsobjekt, Entscheidung, IfElif, Sonderziel, Sprung, Zeile
+from typing import Self, cast
+
+from attrs import Factory, define, field
+
 from xwatc_zwei import mänx as mänx_mod
+from xwatc_zwei.geschichte import (
+    Bedingung, Bedingungsobjekt, Entscheidung, IfElif, Sonderziel, Sprung, Zeile)
 
 
 class VarTypError(RuntimeError):
     """Ein Fehler, wenn der Typ einer Variable nicht stimmt."""
+
 
 @define
 class Geschichtsmodul:
@@ -79,7 +83,7 @@ class Spielzustand:
             return None
         while True:
             try:
-                zeile = self._position.modul[self._position.pos] 
+                zeile = self._position.modul[self._position.pos]
             except IndexError:
                 if len(self._position.pos) > 1:
                     self._position.pos = (*self._position.pos[:-3], self._position.pos[-3] + 1)
@@ -129,7 +133,7 @@ class Spielzustand:
         """Evaluiere eine Bedingung zum jetzigen Zustand."""
         zustand: Bedingungsobjekt = self
         return bed.test(zustand)
-    
+
     def ist_variable(self, variable: str) -> bool:
         """Teste, ob eine Variable gesetzt ist."""
         if variable.startswith("."):
@@ -142,7 +146,6 @@ class Spielzustand:
             raise TypeError(f"Normale Variable als Flag verwendet: {variable}")
         return value
 
-    
     def teste_funktion(self, func_name: str, args: list[str | int]) -> bool:
         """Teste eine Bedingungsfunktion."""
         if func_name in mänx_mod.Mänx.ATTRIBUTE or func_name in mänx_mod.Mänx.P_WERTE:
@@ -152,6 +155,19 @@ class Spielzustand:
                 raise VarTypError("Eigenschaften-Tests nehmen genau einen Int.")
             value, = args
             return self.mänx.get_wert(func_name) >= cast(int, value)
+        elif func_name in ("f", "fähig"):
+            if not self.mänx:
+                raise VarTypError("Mänx-Eigenschaft gefragt, aber kein Mänx.")
+            if not len(args) == 2:
+                raise VarTypError("fähig/f nimmt genau 2 Argumente")
+            fähigkeit, wert = args
+            if not isinstance(fähigkeit, str):
+                raise VarTypError("fähig: Erstes Argument muss str sein.")
+            if not isinstance(wert, int):
+                raise VarTypError("fähig: Zweites Argument muss int sein.")
+            if not (1 <= wert <= 5):
+                raise VarTypError("fähig: Wert muss zwischen 1 und 5 liegen.")
+            return self.mänx.get_fähigkeit(fähigkeit) >= wert
         return False
 
     def entscheide(self, id: str) -> Zeile:

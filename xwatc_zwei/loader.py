@@ -53,8 +53,8 @@ Kommentar = pp.Suppress( pp.Literal("#") + pp.restOfLine)
 _IndentedBlockUngrouped = pp.IndentedBlock(Zeile, grouped=False)
 IndentedBlock = pp.Group(_IndentedBlockUngrouped)
 
-FuncAufruf = ident + pp.Suppress("(") - pp.delimited_list(ident |
-                                                          pp_common.integer) + pp.Suppress(")")
+FuncArgs = pp.delimited_list(ident | pp_common.signed_integer)
+FuncAufruf = ident + pp.Suppress("(") - FuncArgs + pp.Suppress(")")
 Treffen = pp.Suppress("%") - FuncAufruf
 
 FuncBedingung = FuncAufruf.copy().set_parse_action(
