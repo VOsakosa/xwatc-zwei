@@ -10,6 +10,10 @@ Item = str
 Identifier = str
 
 
+class VarTypError(RuntimeError):
+    """Ein Fehler, wenn der Typ einer Variable nicht stimmt."""
+
+
 class Bedingungsobjekt(Protocol):
     def ist_variable(self, variable: str) -> bool:
         """Teste, ob eine Variable gesetzt ist."""

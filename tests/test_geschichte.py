@@ -34,7 +34,7 @@ class TestVerteiler(unittest.TestCase):
 TEST_MODUL = Geschichtsmodul("test", [
     geschichte.Text("Du bist im Wald"),
     geschichte.IfElif(fälle=[
-        (loader.parse_bedingung("has(schwert)"), [
+        (loader.parse_bedingung("hat(schwert)"), [
             geschichte.Text("Du hast ein Schwert!")
         ])
     ]),
@@ -100,8 +100,8 @@ class TestSpielzustand(unittest.TestCase):
 
     def test_weltvariable_bedingung(self) -> None:
         zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
-        assert zustand.welt
-        zustand.welt.setze_variable("dritte_frau_tot", True)
+        assert zustand._welt
+        zustand._welt.setze_variable("dritte_frau_tot", True)
         with self.assertRaises(ParseBaseException):
             loader.parse_bedingung(". dritte_frau_tot")
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung(".dritte_frau_tot")))
@@ -111,8 +111,7 @@ class TestSpielzustand(unittest.TestCase):
 
     def test_eigenschaft_bedingung(self) -> None:
         zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
-        assert zustand.mänx
-        zustand.mänx._werte["schlau"] = 12
+        zustand.assert_get_mänx()._werte["schlau"] = 12
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("schlau(1)")))
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("schlau(12)")))
         self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung("schlau(13)")))
@@ -123,8 +122,8 @@ class TestSpielzustand(unittest.TestCase):
 
     def test_fähigkeit_bedingung(self) -> None:
         zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
-        assert zustand.mänx
-        zustand.mänx.set_fähigkeit("fliegen", 3)
+        assert zustand._mänx
+        zustand.assert_get_mänx().set_fähigkeit("fliegen", 3)
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("f(fliegen,1)")))
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("f(fliegen,3)")))
         self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung("f(fliegen,5)")))

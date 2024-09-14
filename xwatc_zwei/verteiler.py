@@ -1,16 +1,13 @@
 """Die Verteiler wählen Geschichtsmodule"""
 from collections.abc import Sequence
-from typing import Self, cast
+from typing import Any, Self, cast
 
 from attrs import Factory, define, field
 
+from xwatc_zwei import bedingung
 from xwatc_zwei import mänx as mänx_mod
-from xwatc_zwei.geschichte import (
-    Bedingung, Bedingungsobjekt, Entscheidung, IfElif, Sonderziel, Sprung, Zeile)
-
-
-class VarTypError(RuntimeError):
-    """Ein Fehler, wenn der Typ einer Variable nicht stimmt."""
+from xwatc_zwei.geschichte import (Bedingung, Bedingungsobjekt, Entscheidung,
+                                   IfElif, Sonderziel, Sprung, VarTypError, Zeile)
 
 
 @define
@@ -65,17 +62,23 @@ class Weltposition:
 
 
 @define
-class Spielzustand:
+class Spielzustand(bedingung.Bedingungsdaten):
     """Modelliert das ganze Spiel, ohne Darstellung."""
     verteiler: Verteiler
     _position: Weltposition
-    mänx: None | mänx_mod.Mänx = None
-    welt: None | mänx_mod.Welt = None
+    _mänx: None | mänx_mod.Mänx = None
+    _welt: None | mänx_mod.Welt = None
 
     @classmethod
     def from_verteiler(cls, verteiler: Verteiler) -> Self:
         return cls(verteiler, position=Weltposition(verteiler.module[0]),
                    mänx=mänx_mod.Mänx.default(), welt=mänx_mod.Welt())
+
+    def get_mänx(self) -> mänx_mod.Mänx | None:
+        return self._mänx
+
+    def get_welt(self) -> mänx_mod.Welt | None:
+        return self._welt
 
     def aktuelle_zeile(self) -> Zeile | None:
         """Gebe die aktuelle Zeile aus."""
@@ -137,38 +140,42 @@ class Spielzustand:
     def ist_variable(self, variable: str) -> bool:
         """Teste, ob eine Variable gesetzt ist."""
         if variable.startswith("."):
-            if not self.welt:
+            if not self._welt:
                 raise ValueError("Welt ist None, kann keine Weltvariablen abfragen.")
-            value = self.welt.get_variable(variable[1:], False)
+            value = self._welt.get_variable(variable[1:], False)
         else:
             value = self._position.modul_vars.get(variable, False)
         if not isinstance(value, bool):
             raise TypeError(f"Normale Variable als Flag verwendet: {variable}")
         return value
 
-    def teste_funktion(self, func_name: str, args: list[str | int]) -> bool:
+    def teste_funktion(self, func_name: str, args: Sequence[str | int | None]) -> bool:
         """Teste eine Bedingungsfunktion."""
-        if func_name in mänx_mod.Mänx.ATTRIBUTE or func_name in mänx_mod.Mänx.P_WERTE:
-            if not self.mänx:
-                raise VarTypError("Mänx-Eigenschaft gefragt, aber kein Mänx.")
-            if not len(args) == 1 or not isinstance(args[0], int):
-                raise VarTypError("Eigenschaften-Tests nehmen genau einen Int.")
-            value, = args
-            return self.mänx.get_wert(func_name) >= cast(int, value)
-        elif func_name in ("f", "fähig"):
-            if not self.mänx:
-                raise VarTypError("Mänx-Eigenschaft gefragt, aber kein Mänx.")
-            if not len(args) == 2:
-                raise VarTypError("fähig/f nimmt genau 2 Argumente")
-            fähigkeit, wert = args
-            if not isinstance(fähigkeit, str):
-                raise VarTypError("fähig: Erstes Argument muss str sein.")
-            if not isinstance(wert, int):
-                raise VarTypError("fähig: Zweites Argument muss int sein.")
-            if not (1 <= wert <= 5):
-                raise VarTypError("fähig: Wert muss zwischen 1 und 5 liegen.")
-            return self.mänx.get_fähigkeit(fähigkeit) >= wert
-        return False
+        # Variablen auswerten, etc.
+        # args = [self.prepare_arg(arg) for arg in args]
+        func = bedingung.Bedingungsfunc.by_name(func_name)
+        if not func:
+            raise VarTypError(f"Unbekannte Regel {func_name}")
+        args_parsed: list[Any] = []
+        if len(args) > len(func.args):
+            raise VarTypError(f"{func_name} hat {len(args)} statt {len(func.args)} Argumente. "
+                              "Semikolon statt Komma?")
+        args = [*args] + [None] * (len(func.args) - len(args))
+        for i, (arg, (arg_t, is_opt)) in enumerate(zip(args, func.args, strict=True)):
+            if is_opt and arg is None:
+                args_parsed.append(None)
+            elif arg is None:
+                raise VarTypError(f"{func_name} hat {len(args)} statt {len(func.args)} Argumente. "
+                                  "Komma statt Semikolon?")
+            if arg_t in (str, int):
+                if not isinstance(arg, arg_t):
+                    raise VarTypError(
+                        f"Das {i+1}-te Argument von {func_name} muss {arg_t.__name__} sein.")
+                args_parsed.append(arg)
+            else:
+                raise ValueError(f"Unbekannter Argumenttyp {arg_t} für {func_name}")
+        daten: bedingung.Bedingungsdaten = self
+        return func.callable(daten, *args_parsed)
 
     def entscheide(self, id: str) -> Zeile:
         """Treffe eine Entscheidung und gebe die folgende Zeile zurück.
