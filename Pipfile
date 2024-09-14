@@ -7,6 +7,7 @@ name = "pypi"
 attrs = "*"
 pyparsing = "*"
 pyqt5 = "*"
+cattrs = "*"
 
 [dev-packages]
 pyqt5-stubs = "*"
