@@ -8,7 +8,7 @@ import cattrs.converters
 from attrs import define
 
 from xwatc_zwei import mänx as mänx_mod
-from xwatc_zwei.geschichte import VarTypError
+from xwatc_zwei.geschichte import Item, VarTypError
 
 C = TypeVar("C", bound=Callable)
 
@@ -81,3 +81,8 @@ def fähig(daten: Bedingungsdaten, fähigkeit: str, wert: None | int = None) -> 
     elif not (1 <= wert <= 5):
         raise VarTypError("fähig: Wert muss zwischen 1 und 5 liegen.")
     return daten.assert_get_mänx().get_fähigkeit(fähigkeit) >= wert
+
+
+@bedingung()
+def hat(daten: Bedingungsdaten, item: str) -> bool:
+    return False
