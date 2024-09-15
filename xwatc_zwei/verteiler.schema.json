@@ -1,0 +1,43 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Verteiler-Objekt",
+    "description": "Ein Verteiler-Objekt mit Teilen.",
+    "type": "object",
+    "properties": {
+        "start": {
+            "type": "string",
+            "description": "Die Situation, in der gestartet wird."
+        },
+        "starter": {
+            "type": "array",
+            "description": "Geschichten, die sofort eingereiht werden.",
+            "uniqueItems": true
+        },
+        "situationen": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "module": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "module"
+                ]
+            },
+            "minItems": 1
+        }
+    },
+    "required": [
+        "start",
+        "situationen"
+    ]
+}

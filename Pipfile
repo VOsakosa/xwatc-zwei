@@ -8,9 +8,11 @@ attrs = "*"
 pyparsing = "*"
 pyqt5 = "*"
 cattrs = "*"
+jsonschema = "*"
 
 [dev-packages]
 pyqt5-stubs = "*"
+types-jsonschema = "*"
 
 [requires]
 python_version = "3"

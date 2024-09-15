@@ -1,15 +1,17 @@
 """Lädt Scenarien."""
 
 from collections.abc import Sequence
+import json
 from os import PathLike
 from typing import Any
 
+import jsonschema
 import pyparsing as pp
 from attrs import define
 from pyparsing import OpAssoc
 from pyparsing import pyparsing_common as pp_common
 
-from xwatc_zwei import geschichte, verteiler
+from xwatc_zwei import LEVELS, MODULE_PATH, geschichte, verteiler
 
 pp.ParserElement.enable_packrat()
 
@@ -142,8 +144,10 @@ def resolve_modul(results: pp.ParseResults) -> verteiler.Geschichtsblock:
 
 def load_geschichte(path: PathLike) -> verteiler.Geschichte:
     """Lade ein Szenario aus einer Datei."""
+    path = LEVELS / path
+    name = str(path.relative_to(LEVELS, walk_up=True)).removesuffix(".cfg")
     parsed = GeschichteBody.parse_file(path, parse_all=True, encoding="utf-8")
-    vert = verteiler.Geschichte(parsed.as_list())
+    vert = verteiler.Geschichte(parsed.as_list(), name)
     for modul in vert.module:
         geschichte.teste_block(modul.zeilen, modul.id)
     return vert
@@ -151,6 +155,23 @@ def load_geschichte(path: PathLike) -> verteiler.Geschichte:
 
 def load_verteiler(path: PathLike) -> verteiler.Verteiler:
     """Lade einen Verteiler."""
+    with open(path, "r", encoding="utf-8") as read:
+        data = json.load(read)
+    with open(MODULE_PATH / "verteiler.schema.json", "r", encoding="utf-8") as read:
+        schema = json.load(read)
+    jsonschema.validate(data, schema)
+    start = data["start"]
+    situationen = []
+    for situation in data["situationen"]:
+        situationen.append(verteiler.Situation(
+            situation["id"], [load_geschichte(geschichte) for geschichte in situation["module"]]))
+    for sit in situationen:
+        if sit.id == start:
+            start_sit = sit
+            break
+    else:
+        raise ValueError(f"Die Startsituation {start} ist nicht in der Liste der Situationen.")
+    return verteiler.Verteiler(situationen, start_sit)
 
 
 def parse_bedingung(bed_str: str):

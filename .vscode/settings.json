@@ -3,5 +3,13 @@
         "tests"
     ],
     "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
+    "python.testing.pytestEnabled": true,
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "/level/*.json"
+            ],
+            "url": "./xwatc_zwei/verteiler.schema.json"
+        }
+    ]
 }
