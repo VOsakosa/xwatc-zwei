@@ -138,6 +138,10 @@ class Spielzustand(bedingung.Bedingungsdaten):
     def from_verteiler(cls, verteiler: Verteiler) -> Self:
         return cls(verteiler, mänx=mänx_mod.Mänx.default(), welt=mänx_mod.Welt())
 
+    @classmethod
+    def aus_geschichte(cls, geschichte: Geschichte) -> Self:
+        return cls.from_verteiler(Verteiler.aus_geschichte(geschichte))
+
     def get_mänx(self) -> mänx_mod.Mänx | None:
         return self._mänx
 
@@ -169,7 +173,8 @@ class Spielzustand(bedingung.Bedingungsdaten):
         :raises ValueError: wenn gerade keine Entscheidung ansteht.
         """
         if not self._position:
-            assert not id, "Kein Rückgabewert zum Start der Geschichte!"
+            if id:
+                raise ValueError("Kein Rückgabewert zum Start der Geschichte!")
             self._position = Weltposition.start(self.verteiler.nächste_geschichte(self))
             return
         zeile = self._position.aktuelle_zeile()
