@@ -15,7 +15,8 @@ pp.ParserElement.enable_packrat()
 
 ident = pp_common.identifier.copy().set_whitespace_chars(" \t")  # type: ignore
 NoSlashRest = pp.Regex(r"[^/\n]*").leave_whitespace()
-Header = pp.Suppress("/") + ident + pp.Suppress("/").set_whitespace_chars(" ") + NoSlashRest + pp.LineEnd()
+Header = (pp.Suppress("/") + ident + pp.Suppress("/").set_whitespace_chars(" ") +
+          NoSlashRest + pp.LineEnd())
 
 
 @Header.set_parse_action
@@ -47,7 +48,7 @@ Geben = pp.Suppress("+") - ident + pp_common.integer[0, 1].set_whitespace_chars(
 Geben.set_parse_action(lambda res: geschichte.Erhalten(*res))
 Geben.set_name("Geben")
 
-Kommentar = pp.Suppress( pp.Literal("#") + pp.restOfLine)
+Kommentar = pp.Suppress(pp.Literal("#") + pp.restOfLine)
 
 
 _IndentedBlockUngrouped = pp.IndentedBlock(Zeile, grouped=False)

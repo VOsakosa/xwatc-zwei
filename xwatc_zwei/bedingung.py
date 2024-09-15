@@ -2,6 +2,8 @@
 from collections.abc import Sequence
 from functools import partial
 from itertools import chain
+import math
+from random import random
 from typing import Any, Callable, Protocol, TypeVar, Union, get_type_hints
 
 import cattrs.converters
@@ -85,4 +87,23 @@ def fähig(daten: Bedingungsdaten, fähigkeit: str, wert: None | int = None) -> 
 
 @bedingung()
 def hat(daten: Bedingungsdaten, item: str) -> bool:
+    return False
+
+
+@bedingung()
+def wurf(daten: Bedingungsdaten, eigenschaft: str, ziel: int) -> bool:
+    wert = daten.assert_get_mänx().get_wert(eigenschaft)
+    log = math.log1p((wert-ziel) / ziel)
+    wkeit = (log/math.log(2) + 1) / 2
+    return random() < wkeit
+
+
+@bedingung()
+def glück(daten: Bedingungsdaten, ziel: int) -> bool:
+    wkeit = ziel / 100
+    return random() < wkeit
+
+
+@bedingung()
+def bestiarium(daten: Bedingungsdaten) -> bool:
     return False

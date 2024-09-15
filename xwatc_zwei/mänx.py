@@ -11,7 +11,7 @@ VarTyp = bool | int | str
 class Mänx:
     """Der Hauptcharakter"""
     ATTRIBUTE: ClassVar[list[str]] = ["flink", "weise", "schlau", "stark", "wach"]
-    P_WERTE: ClassVar[list[str]] = ["selbstsicher", "stabil", "gesellig"]
+    P_WERTE: ClassVar[list[str]] = ["selbstsicher", "stabil", "gesellig", "naturliebend"]
     _werte: dict[str, int]
     _fähigkeiten: dict[str, int] = Factory(dict)
 
