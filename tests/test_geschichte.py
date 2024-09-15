@@ -3,16 +3,16 @@ import unittest
 
 from pyparsing import ParseBaseException
 from xwatc_zwei import LEVELS, geschichte, loader
-from xwatc_zwei.verteiler import Geschichtsmodul, Spielzustand, VarTypError, Verteiler
+from xwatc_zwei.verteiler import Geschichtsblock, Spielzustand, VarTypError, Geschichte
 
 
 class TestVerteiler(unittest.TestCase):
 
     def test_modul_by_id(self) -> None:
-        vert = Verteiler([
-            Geschichtsmodul("a", [geschichte.Text("a")]),
-            Geschichtsmodul("b", [geschichte.Text("b")]),
-            Geschichtsmodul("C2PO", [geschichte.Text("R2-D2!")]),
+        vert = Geschichte([
+            Geschichtsblock("a", [geschichte.Text("a")]),
+            Geschichtsblock("b", [geschichte.Text("b")]),
+            Geschichtsblock("C2PO", [geschichte.Text("R2-D2!")]),
         ])
         self.assertEqual(vert.modul_by_id("a").id, "a")
         self.assertEqual(vert.modul_by_id("C2PO").id, "C2PO")
@@ -25,13 +25,13 @@ class TestVerteiler(unittest.TestCase):
 
     def test_disallow_doubled_id(self) -> None:
         with self.assertRaises(ValueError):
-            Verteiler([
-                Geschichtsmodul("a", [geschichte.Text("a")]),
-                Geschichtsmodul("a", [geschichte.Text("nichts zu tun")])
+            Geschichte([
+                Geschichtsblock("a", [geschichte.Text("a")]),
+                Geschichtsblock("a", [geschichte.Text("nichts zu tun")])
             ])
 
 
-TEST_MODUL = Geschichtsmodul("test", [
+TEST_MODUL = Geschichtsblock("test", [
     geschichte.Text("Du bist im Wald"),
     geschichte.IfElif(fälle=[
         (loader.parse_bedingung("hat(schwert)"), [
@@ -79,7 +79,7 @@ class TestSpielzustand(unittest.TestCase):
 
     def test_next_und_entscheide(self) -> None:
         modul = TEST_MODUL
-        zustand = Spielzustand.from_verteiler(Verteiler([modul]))
+        zustand = Spielzustand.from_verteiler(Geschichte([modul]))
         self.assertIsNone(zustand.aktuelle_zeile())
         with self.assertRaises(ValueError):
             zustand.entscheide("ja")
@@ -91,7 +91,7 @@ class TestSpielzustand(unittest.TestCase):
             zustand.next()
 
     def test_modulvariable_bedingung(self) -> None:
-        zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
+        zustand = Spielzustand.from_verteiler(Geschichte([TEST_MODUL]))
         zustand._position.modul_vars["dritte_frau_tot"] = True
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("dritte_frau_tot")))
         self.assertFalse(zustand.eval_bedingung(loader.parse_bedingung("!(dritte_frau_tot)")))
@@ -99,7 +99,7 @@ class TestSpielzustand(unittest.TestCase):
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("!zweite_frau_tot")))
 
     def test_weltvariable_bedingung(self) -> None:
-        zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
+        zustand = Spielzustand.from_verteiler(Geschichte([TEST_MODUL]))
         assert zustand._welt
         zustand._welt.setze_variable("dritte_frau_tot", True)
         with self.assertRaises(ParseBaseException):
@@ -110,7 +110,7 @@ class TestSpielzustand(unittest.TestCase):
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("!.zweite_frau_tot")))
 
     def test_eigenschaft_bedingung(self) -> None:
-        zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
+        zustand = Spielzustand.from_verteiler(Geschichte([TEST_MODUL]))
         zustand.assert_get_mänx()._werte["schlau"] = 12
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("schlau(1)")))
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("schlau(12)")))
@@ -121,7 +121,7 @@ class TestSpielzustand(unittest.TestCase):
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("stabil(10), !schlau(13)")))
 
     def test_fähigkeit_bedingung(self) -> None:
-        zustand = Spielzustand.from_verteiler(Verteiler([TEST_MODUL]))
+        zustand = Spielzustand.from_verteiler(Geschichte([TEST_MODUL]))
         assert zustand._mänx
         zustand.assert_get_mänx().set_fähigkeit("fliegen", 3)
         self.assertTrue(zustand.eval_bedingung(loader.parse_bedingung("f(fliegen,1)")))

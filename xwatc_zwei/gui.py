@@ -38,7 +38,7 @@ class Hauptfenster:
 
     def set_text(self, texts: list[str]) -> None:
         self.label.setText("\n".join(texts))
-    
+
     def set_buttons(self, buttons: list[str]) -> None:
         for button in self.buttons:
             button.setParent(None)  # type: ignore
@@ -81,8 +81,7 @@ class Controller:
         self.fenster.set_text(texts)
         self.fenster.set_buttons([w.text for w in a.wahlen])
         for button, wahl in zip(self.fenster.buttons, a.wahlen):
-            button.clicked.connect(lambda *,id=wahl.id:self.next(id))
-    
+            button.clicked.connect(lambda *, id=wahl.id: self.next(id))
 
 
 # Hauptfunktion zum Ausführen der Anwendung
@@ -93,7 +92,8 @@ def main():
     app = QApplication(sys.argv)
 
     # Model, View und Controller erstellen
-    zustand = verteiler.Spielzustand.from_verteiler(loader.load_scenario(LEVELS/"Die_Pilzfee.cfg"))
+    zustand = verteiler.Spielzustand.from_verteiler(
+        loader.load_geschichte(LEVELS/"Die_Pilzfee.cfg"))
     view = Hauptfenster.create()
     controller = Controller(view, zustand)
 

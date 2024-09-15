@@ -133,20 +133,24 @@ GeschichteBody = Modul[1, ...]
 
 
 @Modul.set_parse_action
-def resolve_modul(results: pp.ParseResults) -> verteiler.Geschichtsmodul:
+def resolve_modul(results: pp.ParseResults) -> verteiler.Geschichtsblock:
     header, *rest = results
     rest = resolve_block(rest)
     assert isinstance(header, str)
-    return verteiler.Geschichtsmodul(header, rest)
+    return verteiler.Geschichtsblock(header, rest)
 
 
-def load_scenario(path: PathLike) -> verteiler.Verteiler:
+def load_geschichte(path: PathLike) -> verteiler.Geschichte:
     """Lade ein Szenario aus einer Datei."""
     parsed = GeschichteBody.parse_file(path, parse_all=True, encoding="utf-8")
-    vert = verteiler.Verteiler(parsed.as_list())
+    vert = verteiler.Geschichte(parsed.as_list())
     for modul in vert.module:
         geschichte.teste_block(modul.zeilen, modul.id)
     return vert
+
+
+def load_verteiler(path: PathLike) -> verteiler.Verteiler:
+    """Lade einen Verteiler."""
 
 
 def parse_bedingung(bed_str: str):

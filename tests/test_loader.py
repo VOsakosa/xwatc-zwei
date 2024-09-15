@@ -84,8 +84,8 @@ class TestLoader(unittest.TestCase):
             + hassmurmel
         """)
         self.assertEqual(len(gmodule), 1)
-        gmodul: verteiler.Geschichtsmodul = gmodule[0]
-        self.assertIsInstance(gmodul, verteiler.Geschichtsmodul)
+        gmodul: verteiler.Geschichtsblock = gmodule[0]
+        self.assertIsInstance(gmodul, verteiler.Geschichtsblock)
         self.assertEqual(len(gmodul.zeilen), 1)
         ifelif = gmodul.zeilen[0]
         assert isinstance(ifelif, geschichte.IfElif)
@@ -131,7 +131,7 @@ class TestLoader(unittest.TestCase):
     :nord: Zurück
         / Willkommen zurück, Wanderer!
 """, parse_all=True)
-        block: verteiler.Geschichtsmodul = rule_test(loader.Modul, """
+        block: verteiler.Geschichtsblock = rule_test(loader.Modul, """
             /test/ Du kannst nach Süden.
             :süd: Süden
                 :nord: Zurück
@@ -141,7 +141,7 @@ class TestLoader(unittest.TestCase):
             :dings: Nicht Süden
                 / Ich will nicht mehr!
         """)[0]
-        self.assertIsInstance(block, verteiler.Geschichtsmodul)
+        self.assertIsInstance(block, verteiler.Geschichtsblock)
         assert isinstance(block.zeilen[1], geschichte.Entscheidung)
         self.assertListEqual([w.id for w in block.zeilen[1].wahlen], ["süd", "dings"])
 
@@ -152,10 +152,10 @@ class TestLoader(unittest.TestCase):
     /Die Luft schmeckt salzig. Dir ist hungrig.""")
 
     def test_szenario(self):
-        loader.load_scenario(LEVELS / "scenario1.cfg")
+        loader.load_geschichte(LEVELS / "scenario1.cfg")
 
     def test_szenario_pilzfee(self):
-        loader.load_scenario(LEVELS / "Die_Pilzfee.cfg")
-    
+        loader.load_geschichte(LEVELS / "Die_Pilzfee.cfg")
+
     def test_szenario_hund(self):
-        loader.load_scenario(LEVELS / "Kurztreffen_Straße.cfg")
+        loader.load_geschichte(LEVELS / "Kurztreffen_Straße.cfg")

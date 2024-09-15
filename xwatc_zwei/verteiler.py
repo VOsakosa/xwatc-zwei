@@ -11,7 +11,7 @@ from xwatc_zwei.geschichte import (Bedingung, Bedingungsobjekt, Entscheidung,
 
 
 @define
-class Geschichtsmodul:
+class Geschichtsblock:
     """Ein einzelner, ununterbrochener Geschichtsstrang."""
     id: str
     zeilen: list[Zeile]
@@ -31,13 +31,13 @@ class Geschichtsmodul:
 
 
 @define(frozen=True)
-class Verteiler:
-    """Ein Verteiler hält mehrere Geschichtsmodule, die am gleichen 'Ort' sind, z.B. im Wald.
+class Geschichte:
+    """Eine Geschichte ist eine einzige Sache, die dem Abenteurer passiert.
     """
-    module: Sequence[Geschichtsmodul] = field()
+    module: Sequence[Geschichtsblock] = field()
 
     @module.validator
-    def _validate_module(self, _attribute, value: Sequence[Geschichtsmodul]) -> None:
+    def _validate_module(self, _attribute, value: Sequence[Geschichtsblock]) -> None:
         """Validate that all modules' ids are unique."""
         seen = set()
         for mod in value:
@@ -45,7 +45,7 @@ class Verteiler:
                 raise ValueError(f"Doppelt vergebene Geschichtsmodul-Id {mod.id}")
             seen.add(mod.id)
 
-    def modul_by_id(self, name: str) -> Geschichtsmodul:
+    def modul_by_id(self, name: str) -> Geschichtsblock:
         """Finde ein Modul mithilfe seiner Id."""
         for modul in self.module:
             if modul.id == name:
@@ -53,10 +53,15 @@ class Verteiler:
         raise KeyError("Unbekanntes Modul", name)
 
 
+@define(frozen=False)
+class Verteiler:
+    """Der Verteiler gibt die Geschichten aus, die dem Spieler passieren."""
+
+
 @define
 class Weltposition:
     """Eine Position in der Geschichte."""
-    modul: Geschichtsmodul
+    modul: Geschichtsblock
     pos: tuple[int, ...] | None = None
     modul_vars: 'dict[str, mänx_mod.VarTyp]' = Factory(dict)
 
@@ -64,13 +69,13 @@ class Weltposition:
 @define
 class Spielzustand(bedingung.Bedingungsdaten):
     """Modelliert das ganze Spiel, ohne Darstellung."""
-    verteiler: Verteiler
+    verteiler: Geschichte
     _position: Weltposition
     _mänx: None | mänx_mod.Mänx = None
     _welt: None | mänx_mod.Welt = None
 
     @classmethod
-    def from_verteiler(cls, verteiler: Verteiler) -> Self:
+    def from_verteiler(cls, verteiler: Geschichte) -> Self:
         return cls(verteiler, position=Weltposition(verteiler.module[0]),
                    mänx=mänx_mod.Mänx.default(), welt=mänx_mod.Welt())
 
