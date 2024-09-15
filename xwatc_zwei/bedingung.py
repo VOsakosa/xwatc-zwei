@@ -105,5 +105,5 @@ def glück(daten: Bedingungsdaten, ziel: int) -> bool:
 
 
 @bedingung()
-def bestiarium(daten: Bedingungsdaten) -> bool:
+def bestiarium(daten: Bedingungsdaten, monster: str) -> bool:
     return False
