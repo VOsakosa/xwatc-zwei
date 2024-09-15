@@ -1,0 +1,14 @@
+{
+    "start": "Abenteurer",
+    "starter": [],
+    "verteiler": [
+        {
+            "id": "Abenteurer",
+            "module": [
+                "scenario1.cfg",
+                "Die_Pilzfee.cfg",
+                "Kurztreffen_Straße.cfg"
+            ]
+        }
+    ]
+}
