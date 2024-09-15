@@ -82,13 +82,13 @@ class TestSpielzustand(unittest.TestCase):
         zustand = Spielzustand.from_verteiler(Geschichte([modul]))
         self.assertIsNone(zustand.aktuelle_zeile())
         with self.assertRaises(ValueError):
-            zustand.entscheide("ja")
-        self.assertEqual(zustand.next(), geschichte.Text("Du bist im Wald"))
+            zustand._entscheide("ja")
+        self.assertEqual(zustand._run_line(), geschichte.Text("Du bist im Wald"))
         # Mänx hat kein Schwert.
-        self.assertIsInstance(zustand.next(), geschichte.Entscheidung)
+        self.assertIsInstance(zustand._run_line(), geschichte.Entscheidung)
         with self.assertRaises(ValueError):
             # Bei Entscheidungen kann man nicht next sagen.
-            zustand.next()
+            zustand._run_line()
 
     def test_modulvariable_bedingung(self) -> None:
         zustand = Spielzustand.from_verteiler(Geschichte([TEST_MODUL]))

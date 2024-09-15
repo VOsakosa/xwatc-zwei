@@ -156,7 +156,10 @@ class IfElif:
         return [fall[1] for fall in self.fälle]
 
 
-Zeile = Text | Erhalten | Entscheidung | Sprung | IfElif | Treffen
+OutputZeile = Text | Erhalten
+InputZeile = Entscheidung | Treffen
+FunktionsZeile = Sprung | IfElif
+Zeile = OutputZeile | InputZeile | FunktionsZeile
 
 
 def teste_block(block: Sequence[Zeile], name: str) -> None:

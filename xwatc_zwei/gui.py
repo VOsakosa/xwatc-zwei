@@ -1,12 +1,12 @@
 """Das User-Interface für das Spiel, sowie die Hauptklasse."""
 import sys
-from typing import Self
+from typing import Self, assert_never
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QPushButton
 from attrs import define, field
 
 from xwatc_zwei import LEVELS, loader, verteiler
 from xwatc_zwei import geschichte
-from xwatc_zwei.geschichte import Entscheidung, Text
+from xwatc_zwei.geschichte import Entscheidung, Erhalten, Text, Treffen
 
 
 @define
@@ -63,25 +63,25 @@ class Controller:
 
     def next(self, wahl_id: str | None = None):
         assert self.model
+        outputs, choice = self.model.run(wahl_id or "")
         texts = []
-        while True:
-            if wahl_id:
-                a = self.model.entscheide(wahl_id)
-                wahl_id = None
-            else:
-                a = self.model.next()
-            if isinstance(a, Entscheidung):
-                break
-            elif isinstance(a, Text):
-                texts.append(a.text)
-            elif isinstance(a, geschichte.Sprung):
-                pass
-            else:
-                print("Unbekannter Zeilen-Typ!")
+        for zeile in outputs:
+            match zeile:
+                case Text(text=text):
+                    texts.append(text)
+                case Erhalten(objekt=item, anzahl=anzahl):
+                    texts.append(f"Du erhältst {anzahl} {item}")
+                case _:
+                    assert_never(zeile)
         self.fenster.set_text(texts)
-        self.fenster.set_buttons([w.text for w in a.wahlen])
-        for button, wahl in zip(self.fenster.buttons, a.wahlen):
-            button.clicked.connect(lambda *, id=wahl.id: self.next(id))
+        if isinstance(choice, Treffen):
+            raise NotImplementedError("Treffen sind nicht implementiert.")
+        elif isinstance(choice, Entscheidung):
+            self.fenster.set_buttons([w.text for w in choice.wahlen])
+            for button, wahl in zip(self.fenster.buttons, choice.wahlen):
+                button.clicked.connect(lambda *, id=wahl.id: self.next(id))
+        else:
+            assert_never(choice)
 
 
 # Hauptfunktion zum Ausführen der Anwendung
@@ -92,8 +92,8 @@ def main():
     app = QApplication(sys.argv)
 
     # Model, View und Controller erstellen
-    zustand = verteiler.Spielzustand.from_verteiler(
-        loader.load_geschichte(LEVELS/"Die_Pilzfee.cfg"))
+    zustand = verteiler.Spielzustand.from_verteiler(verteiler.Verteiler.aus_geschichte(
+        loader.load_geschichte(LEVELS/"Die_Pilzfee.cfg")))
     view = Hauptfenster.create()
     controller = Controller(view, zustand)
 
