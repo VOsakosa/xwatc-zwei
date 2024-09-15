@@ -1,7 +1,7 @@
 """Die einzelnen Befehle innerhalb einer Geschichte"""
 from collections.abc import Sequence
 from enum import Enum
-from typing import Protocol
+from typing import Protocol, assert_never
 
 from attrs import define, field, validators
 
@@ -167,6 +167,7 @@ def teste_block(block: Sequence[Zeile], name: str) -> None:
             raise ValueError(f"Sprung ist nicht letztes Element ({name})")
         elif isinstance(element, IfElif):
             for j, (bed, unterblock) in enumerate(element.fälle):
+                teste_bedingung(bed, f"{name}.{i+1}{chr(0x41+j)}")
                 teste_block(unterblock, f"{name}.{i+1}{chr(0x41+j)}")
                 if not bed and j != len(element.fälle) - 1:
                     raise ValueError(f"Leere Bedingung {name}.{i+1}{chr(0x41+j)} "
@@ -175,6 +176,7 @@ def teste_block(block: Sequence[Zeile], name: str) -> None:
                 raise ValueError(f"Einzige Bedingung ist leer. ({name})")
         elif isinstance(element, Entscheidung):
             for j, wahl in enumerate(element.wahlen):
+                teste_bedingung(wahl.bedingung, f"{name}.{i+1}{chr(0x41+j)}")
                 teste_block(wahl.block, f"{name}.{i+1}{chr(0x41+j)}")
             if len({wahl.id for wahl in element.wahlen}) != len(element.wahlen):
                 raise ValueError(f"Doppelt vergebene Wahl in {name}")
@@ -182,4 +184,25 @@ def teste_block(block: Sequence[Zeile], name: str) -> None:
             raise TypeError(f"{element} ist keine Zeile! ({name})")
 
 
-from xwatc_zwei import verteiler  # noqa
+def teste_bedingung(bedingung: Bedingung | None, name: str) -> None:
+    """Teste Bedingungen auf Fehler, wie z.B. fehlende Funktionen."""
+    match bedingung:
+        case None:
+            return
+        case UndBedingung(bedingungen=bedingungen) | OderBedingung(bedingungen=bedingungen):
+            for unterbedingung in bedingungen:
+                teste_bedingung(unterbedingung, name)
+        case NichtBedingung(bedingung=bedingung):
+            teste_bedingung(bedingung, name)
+        case VariablenBedingung():
+            pass  # TODO Variablen-Check
+        case FuncBedingung(func_name, args):
+            bfunc = bedingung_mod.Bedingungsfunc.by_name(func_name)
+            if bfunc is None:
+                raise VarTypError(f"Bedingung {name}: Funktion {func_name} ist nicht bekannt.")
+            # TODO Typ-Check?
+        case _:
+            assert_never(bedingung)
+
+
+from xwatc_zwei import verteiler, bedingung as bedingung_mod  # noqa
