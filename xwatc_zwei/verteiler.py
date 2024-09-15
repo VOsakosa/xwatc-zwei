@@ -1,5 +1,6 @@
 """Die Verteiler wählen Geschichtsmodule"""
 from collections.abc import Sequence
+from queue import PriorityQueue
 from typing import Any, Self, cast
 
 from attrs import Factory, define, field
@@ -35,6 +36,7 @@ class Geschichte:
     """Eine Geschichte ist eine einzige Sache, die dem Abenteurer passiert.
     """
     module: Sequence[Geschichtsblock] = field()
+    pfad: str = ""
 
     @module.validator
     def _validate_module(self, _attribute, value: Sequence[Geschichtsblock]) -> None:
@@ -45,7 +47,7 @@ class Geschichte:
                 raise ValueError(f"Doppelt vergebene Geschichtsmodul-Id {mod.id}")
             seen.add(mod.id)
 
-    def modul_by_id(self, name: str) -> Geschichtsblock:
+    def block_by_id(self, name: str) -> Geschichtsblock:
         """Finde ein Modul mithilfe seiner Id."""
         for modul in self.module:
             if modul.id == name:
@@ -53,15 +55,50 @@ class Geschichte:
         raise KeyError("Unbekanntes Modul", name)
 
 
+@define(frozen=True)
+class Situation:
+    """Eine Situation ist eine Sammlung von Geschichten, die am selben Ort abspielen."""
+    id: str
+    geschichten: Sequence[Geschichte]
+
+
 @define(frozen=False)
 class Verteiler:
     """Der Verteiler gibt die Geschichten aus, die dem Spieler passieren."""
+    _situationen: list[Situation]
+    _warteliste: PriorityQueue[tuple[int, str, str]] = Factory(PriorityQueue)
+    _geschichten: dict[str, Geschichte] = Factory(dict)
+    zeit: int = 1
+
+    def __attrs_post_init__(self):
+        self._update_geschichten()
+
+    def _update_geschichten(self):
+        """Update den Cache für Geschichten aus den gegebenen Situationen."""
+        for situation in self._situationen:
+            for geschichte in situation.geschichten:
+                if geschichte.pfad:
+                    self._geschichten[geschichte.pfad] = geschichte
+
+    @classmethod
+    def aus_geschichte(cls, geschichte: Geschichte) -> Self:
+        """Mache einen Test-Verteiler aus einer einzigen Geschichte."""
+        situation = Situation("test", [geschichte])
+        return cls([situation], situation)
+
+    def geschichte_by_id(self, name: str) -> Geschichte:
+        """Hole die Geschichte mit ihrem Pfad."""
+
+    def nächste_geschichte(self, daten: bedingung.Bedingungsdaten) -> Geschichte:
+        """Hole die nächste Geschichte raus."""
 
 
 @define
 class Weltposition:
     """Eine Position in der Geschichte."""
-    modul: Geschichtsblock
+    situation: Situation
+    geschichte: Geschichte
+    block: Geschichtsblock
     pos: tuple[int, ...] | None = None
     modul_vars: 'dict[str, mänx_mod.VarTyp]' = Factory(dict)
 
@@ -69,14 +106,14 @@ class Weltposition:
 @define
 class Spielzustand(bedingung.Bedingungsdaten):
     """Modelliert das ganze Spiel, ohne Darstellung."""
-    verteiler: Geschichte
+    verteiler: Verteiler
     _position: Weltposition
     _mänx: None | mänx_mod.Mänx = None
     _welt: None | mänx_mod.Welt = None
 
     @classmethod
-    def from_verteiler(cls, verteiler: Geschichte) -> Self:
-        return cls(verteiler, position=Weltposition(verteiler.module[0]),
+    def from_verteiler(cls, verteiler: Verteiler) -> Self:
+        return cls(verteiler, position=Weltposition(),
                    mänx=mänx_mod.Mänx.default(), welt=mänx_mod.Welt())
 
     def get_mänx(self) -> mänx_mod.Mänx | None:
@@ -91,7 +128,7 @@ class Spielzustand(bedingung.Bedingungsdaten):
             return None
         while True:
             try:
-                zeile = self._position.modul[self._position.pos]
+                zeile = self._position.block[self._position.pos]
             except IndexError:
                 if len(self._position.pos) > 1:
                     self._position.pos = (*self._position.pos[:-3], self._position.pos[-3] + 1)
@@ -126,7 +163,7 @@ class Spielzustand(bedingung.Bedingungsdaten):
             if ans.ziel == Sonderziel.Self:
                 self._position.pos = (0,)
             else:
-                self._position.modul = self.verteiler.modul_by_id(ans.ziel)
+                self._position.block = self._position.geschichte.block_by_id(ans.ziel)
                 self._position.pos = (0,)
         elif isinstance(ans, IfElif):
             raise AssertionError("aktuelle_zeile sollte nie IfElif zurückgeben")

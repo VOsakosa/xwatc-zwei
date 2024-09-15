@@ -14,14 +14,14 @@ class TestVerteiler(unittest.TestCase):
             Geschichtsblock("b", [geschichte.Text("b")]),
             Geschichtsblock("C2PO", [geschichte.Text("R2-D2!")]),
         ])
-        self.assertEqual(vert.modul_by_id("a").id, "a")
-        self.assertEqual(vert.modul_by_id("C2PO").id, "C2PO")
+        self.assertEqual(vert.block_by_id("a").id, "a")
+        self.assertEqual(vert.block_by_id("C2PO").id, "C2PO")
         with self.assertRaises(KeyError):
-            vert.modul_by_id("C")
+            vert.block_by_id("C")
 
         # Not case-insensitive
         with self.assertRaises(KeyError):
-            vert.modul_by_id("A")
+            vert.block_by_id("A")
 
     def test_disallow_doubled_id(self) -> None:
         with self.assertRaises(ValueError):

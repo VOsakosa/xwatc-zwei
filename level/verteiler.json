@@ -1,7 +1,7 @@
 {
     "start": "Abenteurer",
     "starter": [],
-    "verteiler": [
+    "situationen": [
         {
             "id": "Abenteurer",
             "module": [
