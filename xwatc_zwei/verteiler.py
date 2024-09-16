@@ -188,6 +188,7 @@ class Spielzustand(bedingung.Bedingungsdaten):
         else:
             raise KeyError(f"Entscheidung {id} stand nicht zur Wahl.")
         self._position.pos = (*self._position.pos, i, 0)
+        self._position.modul_vars["_"] = id
 
     def _run_line(self) -> None:
         """Führe eine Zeile aus.
