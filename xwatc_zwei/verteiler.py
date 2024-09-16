@@ -108,6 +108,7 @@ class Weltposition:
 
     @staticmethod
     def start(geschichte: Geschichte) -> 'Weltposition':
+        """Die Weltposition am Anfang der Geschichte, mit keiner Variable gesetzt."""
         return Weltposition(geschichte, geschichte.module[0])
 
     def aktuelle_zeile(self) -> Zeile | None:
@@ -123,6 +124,7 @@ class Weltposition:
                     return None
 
     def advance(self) -> None:
+        """Bewege die Position um genau 1 nach vorne."""
         self.pos = (*self.pos[:-1], self.pos[-1] + 1)
 
 
