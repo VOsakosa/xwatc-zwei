@@ -222,6 +222,9 @@ class Spielzustand(bedingung.Bedingungsdaten):
             pass
         elif isinstance(zeile, geschichte.Erhalten):
             pass  # TODO Gebe dem Mänxen Zeugs
+        elif isinstance(zeile, geschichte.SetzeVariable):
+            globals_ = self._welt._variablen if self._welt else None
+            zeile.ausführen(self._position.modul_vars, globals_)
         else:
             assert_never(zeile)
         if not jump:

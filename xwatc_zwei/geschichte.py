@@ -5,6 +5,8 @@ from typing import Protocol, assert_never
 
 from attrs import define, field, validators
 
+from xwatc_zwei.mänx import VarTyp
+
 
 Item = str
 Identifier = str
@@ -156,9 +158,34 @@ class IfElif:
         return [fall[1] for fall in self.fälle]
 
 
+@define
+class SetzeVariable:
+    """Zeile, die eine Variable setzt."""
+    variable: str
+    wert: VarTyp
+    operator: str = "="
+
+    def ausführen(self, locals: dict[str, VarTyp], globals: None | dict[str, VarTyp]) -> None:
+        if self.variable.startswith("."):
+            var = self.variable.removeprefix(".")
+            if globals is None:
+                return
+            dct = globals
+        else:
+            var = self.variable
+            dct = locals
+        if var in dct and type(dct[var]) != type(self.wert):
+            raise VarTypError(f"Variable hat Typ {type(var).__name__}, kann nicht auf "
+                              f"{self.wert} gesetzt werden")
+        if self.operator == "=":
+            dct[var] = self.wert
+        else:
+            raise VarTypError(f"Unbekannter Operator: {self.operator!r}")
+
+
 OutputZeile = Text | Erhalten
 InputZeile = Entscheidung | Treffen
-FunktionsZeile = Sprung | IfElif
+FunktionsZeile = Sprung | IfElif | SetzeVariable
 Zeile = OutputZeile | InputZeile | FunktionsZeile
 
 

@@ -138,7 +138,26 @@ class TestSpielzustand(unittest.TestCase):
         with self.assertRaises(VarTypError):
             zustand.eval_bedingung(loader.parse_bedingung("f(fliegen, 0)"))
 
+    def test_setze_variable(self) -> None:
+        zustand = Spielzustand.aus_geschichte(Geschichte([Geschichtsblock("test", [
+            geschichte.SetzeVariable("testvar", "blubb"),
+            geschichte.SetzeVariable(".testvar", "globalblubb"),
+            geschichte.Entscheidung([geschichte.Wahlmöglichkeit("w", "Weiter", [
+                geschichte.Text("ff")]
+            )]),
+            geschichte.SetzeVariable("othervar", 4),
+            geschichte.SetzeVariable("testvar", 4)
+        ])]))
+        outputs, input = zustand.run("")
+        self.assertFalse(outputs)
+        self.assertIsInstance(input, geschichte.Entscheidung)
+        self.assertEqual(zustand.assert_get_welt().get_variable("testvar", ""), "globalblubb")
+        assert zustand._position
+        self.assertEqual(zustand._position.modul_vars["testvar"], "blubb")
+        with self.assertRaises(VarTypError):
+            zustand.run("w")
+
     # def test_bedingungen(selfself) ->None:
         # Was ist das für ein Fehlertyp?
         # with self.assertRaises():
-            # geschichte.IfElif(parse_bed("hat()"))
+        # geschichte.IfElif(parse_bed("hat()"))
