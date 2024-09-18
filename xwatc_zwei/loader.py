@@ -45,10 +45,19 @@ _Self = pp.CaselessKeyword("self").set_parse_action(lambda: geschichte.Sonderzie
 Sprung = pp.Suppress(">") - (_Self | ident).set_parse_action(lambda res:
                                                              geschichte.Sprung(res[0]))
 Sprung.set_name("Sprung")
-# TODO - hinzufügen
-Geben = pp.Suppress("+") - ident + pp_common.integer[0, 1].set_whitespace_chars(" \t")
-Geben.set_parse_action(lambda res: geschichte.Erhalten(*res))
+Geben = pp.one_of("+ -") - ident + pp_common.integer[0, 1].set_whitespace_chars(" \t")("amount")
 Geben.set_name("Geben")
+
+
+@Geben.set_parse_action
+def _geben_parse_action(res: pp.ParseResults):
+    amount: int = res.get("amount", 0)
+    if res[0] == "-":
+        amount = -amount
+    else:
+        assert res[0] == "+"
+    return geschichte.Erhalten(res[1], amount)
+
 
 Kommentar = pp.Suppress(pp.Literal("#") + pp.restOfLine)
 

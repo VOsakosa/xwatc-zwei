@@ -7,7 +7,7 @@ import pyparsing
 from xwatc_zwei import LEVELS, geschichte, loader, verteiler
 
 
-def rule_test(rule: pyparsing.ParserElement, text: str) -> Any:
+def rule_test(rule: pyparsing.ParserElement, text: str) -> pyparsing.ParseResults:
     """Test a rule """
     # rule.set_debug(True)
     return rule.parse_string(inspect.cleandoc(text), parse_all=True)
@@ -75,7 +75,9 @@ class TestLoader(unittest.TestCase):
         <hat(speer)>
             / Ich steche dich ab!
             / mit meinem Speer!
-        <hat(schwert)>
+            / Du wirfst den Speer
+            - Speer
+            + Text
             / Ich bringe dich um!
             + Text         
         <>
