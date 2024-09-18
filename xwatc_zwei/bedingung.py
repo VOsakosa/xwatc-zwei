@@ -24,6 +24,14 @@ class Bedingungsdaten(Protocol):
             return mänx
         raise VarTypError("Mänx-Eigenschaft gefragt, aber kein Mänx.")
 
+    def get_welt(self) -> mänx_mod.Welt | None: ...
+
+    def assert_get_welt(self) -> mänx_mod.Welt:
+        """Hole die Welt und beschwere dich, wenn er nicht da ist."""
+        if welt := self.get_welt():
+            return welt
+        raise VarTypError("Welt-Eigenschaft gefragt, aber kein Welt.")
+
 
 @define
 class Bedingungsfunc:
