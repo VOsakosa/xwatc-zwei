@@ -59,6 +59,14 @@ def _geben_parse_action(res: pp.ParseResults):
     return geschichte.Erhalten(res[1], amount)
 
 
+SetzeVariable = (
+    pp.Combine(pp.Optional(".") + ident)
+    + pp.Literal("=").set_whitespace_chars(" \t")
+    + (pp.QuotedString('"', esc_char="\\").set_whitespace_chars(" \t")
+       | pp_common.signed_integer.set_whitespace_chars(" \t"))
+).set_name("SetzeVariable").set_parse_action(
+    lambda res: geschichte.SetzeVariable(res[0], res[2], res[1]))
+
 Kommentar = pp.Suppress(pp.Literal("#") + pp.restOfLine)
 
 
@@ -132,7 +140,7 @@ def _glue_lines(lines: list) -> Sequence[geschichte.Zeile]:
 _IndentedBlockUngrouped.set_parse_action(resolve_block)
 
 _LineEnd = pp.Suppress(pp.LineEnd() | pp.StringEnd()).set_name("Zeilenende")
-_Statement = (Text | Geben | Sprung | Treffen | Kommentar) + _LineEnd
+_Statement = (Text | Geben | Sprung | Treffen | Kommentar | SetzeVariable) + _LineEnd
 _Statement.set_name("Statement")
 
 Zeile <<= _Statement | Entscheidungsblock | Bedingungsblock

@@ -25,7 +25,7 @@ class TestLoader(unittest.TestCase):
         with self.assertRaises(pyparsing.ParseBaseException):
             rule_test(loader.Modul, """
             /header/
-            /test / und nocheinmal      
+            /test / und nocheinmal
             """)
         with self.assertRaises(pyparsing.ParseBaseException):
             rule_test(loader.Modul, """
@@ -77,9 +77,9 @@ class TestLoader(unittest.TestCase):
             / mit meinem Speer!
             / Du wirfst den Speer
             - Speer
-            + Text
+        <hat(schwert)>
             / Ich bringe dich um!
-            + Text         
+            + Text
         <>
             / Ich werde dich irgendwie umbringen!
             / und dann aufschlitzen!
@@ -152,6 +152,17 @@ class TestLoader(unittest.TestCase):
 /Norden/ Du kommst ans Meer!
 :luft: Die Luft einatmen
     /Die Luft schmeckt salzig. Dir ist hungrig.""")
+
+    def test_setze_variable(self):
+        self.assertEqual(rule_test(loader.Zeile, ".a=1")[0], geschichte.SetzeVariable(".a", 1))
+        self.assertEqual(rule_test(loader.Zeile, "a=-1")[0], geschichte.SetzeVariable("a", -1))
+        self.assertEqual(rule_test(loader.Zeile, 'a="ga"')[0], geschichte.SetzeVariable("a", "ga"))
+        self.assertEqual(rule_test(loader.Zeile, 'aha_ich2="ga aber nicht!"')[
+                         0], geschichte.SetzeVariable("aha_ich2", "ga aber nicht!"))
+        with self.assertRaises(pyparsing.ParseBaseException):
+            rule_test(loader.Zeile, "a\n=1")
+        with self.assertRaises(pyparsing.ParseBaseException):
+            rule_test(loader.Zeile, "a=\n1")
 
     def test_szenario(self):
         loader.load_geschichte(LEVELS / "scenario1.cfg")
