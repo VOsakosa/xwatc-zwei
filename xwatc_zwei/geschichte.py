@@ -182,6 +182,10 @@ class SetzeVariable:
         else:
             raise VarTypError(f"Unbekannter Operator: {self.operator!r}")
 
+    @property
+    def blocks(self) -> 'Sequence[Sequence[Zeile]]':
+        return ()
+
 
 OutputZeile = Text | Erhalten
 InputZeile = Entscheidung | Treffen
