@@ -267,7 +267,7 @@ class Spielzustand(bedingung.Bedingungsdaten):
             elif arg is None:
                 raise VarTypError(f"{func_name} hat {len(args)} statt {len(func.args)} Argumente. "
                                   "Komma statt Semikolon?")
-            if arg_t in (str, int):
+            elif arg_t in (str, int):
                 if not isinstance(arg, arg_t):
                     raise VarTypError(
                         f"Das {i+1}-te Argument von {func_name} muss {arg_t.__name__} sein.")
