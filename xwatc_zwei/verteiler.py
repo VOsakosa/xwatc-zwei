@@ -230,8 +230,10 @@ class Spielzustand(bedingung.Bedingungsdaten):
         if not jump:
             self._position.advance()
 
-    def eval_bedingung(self, bed: Bedingung) -> bool:
+    def eval_bedingung(self, bed: Bedingung | None) -> bool:
         """Evaluiere eine Bedingung zum jetzigen Zustand."""
+        if not bed:
+            return True
         zustand: Bedingungsobjekt = self
         return bed.test(zustand)
 
