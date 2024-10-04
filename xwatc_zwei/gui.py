@@ -77,9 +77,9 @@ class Controller:
         if isinstance(choice, Treffen):
             raise NotImplementedError("Treffen sind nicht implementiert.")
         elif isinstance(choice, Entscheidung):
-            self.fenster.set_buttons(
-                [w.text for w in choice.wahlen if self.model.eval_bedingung(w.bedingung)])
-            for button, wahl in zip(self.fenster.buttons, choice.wahlen):
+            wahlen = [w for w in choice.wahlen if self.model.eval_bedingung(w.bedingung)]
+            self.fenster.set_buttons([w.text for w in wahlen])
+            for button, wahl in zip(self.fenster.buttons, wahlen):
                 button.clicked.connect(lambda *, id=wahl.id: self.next(id))
         else:
             assert_never(choice)
