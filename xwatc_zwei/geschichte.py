@@ -141,6 +141,10 @@ class Entscheidung:
     def blocks(self) -> 'Sequence[Sequence[Zeile]]':
         return [wahl.block for wahl in self.wahlen]
 
+    @staticmethod
+    def neue_bestätigung() -> 'Entscheidung':
+        return Entscheidung([Wahlmöglichkeit("", "Weiter", [])])
+
 
 @define
 class IfElif:

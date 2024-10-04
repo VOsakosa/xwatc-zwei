@@ -135,6 +135,7 @@ class Spielzustand(bedingung.Bedingungsdaten):
     _position: Weltposition | None = None
     _mänx: None | mänx_mod.Mänx = None
     _welt: None | mänx_mod.Welt = None
+    _outputs: list[OutputZeile] = Factory(list)
 
     @classmethod
     def from_verteiler(cls, verteiler: Verteiler) -> Self:
@@ -153,18 +154,19 @@ class Spielzustand(bedingung.Bedingungsdaten):
     def run(self, input: str) -> tuple[Sequence[OutputZeile], InputZeile]:
         """Lasse die Geschichte bis zur nächsten Entscheidung laufen."""
         self._entscheide(input)
-        outputs = list[OutputZeile]()
         while True:
             if not self._position:
                 self._position = Weltposition.start(self.verteiler.nächste_geschichte(self))
             zeile = self._position.aktuelle_zeile()
             if not zeile:  # Ende der Geschichte
                 self._position = None
-                continue
+                outputs = self._outputs.copy()
+                self._outputs.clear()
+                return outputs, Entscheidung.neue_bestätigung()
             if isinstance(zeile, OutputZeile):
-                outputs.append(zeile)
+                self._outputs.append(zeile)
             if isinstance(zeile, InputZeile):
-                return outputs, zeile
+                return self._outputs, zeile
             else:
                 self._run_line()
 
